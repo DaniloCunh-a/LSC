@@ -1,0 +1,28 @@
+From 9419c79ef70f7ec28aaa30e538f7ce15d7ba2d2d Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mateuspantoja9@gmail.com>
+Date: Thu, 19 Jan 2023 19:15:22 -0500
+Subject: [PATCH 03/17] =?UTF-8?q?Inclus=C3=A3o=20do=20comando=20para=20com?=
+ =?UTF-8?q?pila=C3=A7=C3=A3o=20do=20stm32mp157f-dn-som.dtb?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ arch/arm/dts/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
+index c202571f34..c579fd2251 100644
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -1094,6 +1094,7 @@ dtb-$(CONFIG_STM32MP15x) += \
+ 	stm32mp157d-ed1.dtb \
+ 	stm32mp157d-ev1.dtb \
+ 	stm32mp157f-dk2.dtb \
++	stm32mp157f-dn-som.dtb \
+ 	stm32mp157f-ed1.dtb \
+ 	stm32mp157f-ev1.dtb \
+ 	stm32mp15xx-dhcom-pdk2.dtb \
+-- 
+2.34.1
+

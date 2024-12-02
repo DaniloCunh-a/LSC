@@ -1,0 +1,20 @@
+rootfs=`swupdate -g`
+
+if [ $rootfs == '/dev/mmcblk0p10' ];then
+	selection="-e stable,alt"
+else
+	if [ $rootfs == '/dev/mmcblk1p8' ];then
+		selection="-e stable,alt"
+	else
+		selection="-e stable,main"
+	fi
+fi
+
+# state=`fw_printenv ustate | cut -f 2 -d'='`
+# if [ $state == 1 ];then
+# 	SWUPDATE_SURICATTA_ARGS="-c 2"
+# else
+# 	SWUPDATE_SURICATTA_ARGS=" "
+# fi
+
+SWUPDATE_ARGS="-H stm32mp15-dn-som:1.0 ${selection} -f /etc/swupdate.cfg"

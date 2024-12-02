@@ -1,0 +1,388 @@
+From 16aa65e64f419d773a4cba0cec1b0f773f6f568c Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mateuspantoja9@gmail.com>
+Date: Wed, 3 May 2023 00:32:34 -0500
+Subject: [PATCH 15/17] fixing up all bugs around of som
+
+---
+ arch/arm/dts/stm32mp15-pinctrl.dtsi         | 30 ++++++++--
+ arch/arm/dts/stm32mp157f-dn-som-u-boot.dtsi | 37 ++++++++++++
+ arch/arm/dts/stm32mp157f-dn-som.dts         | 66 ++++++++++++++-------
+ arch/arm/dts/stm32mp15xx-edx.dtsi           |  2 +-
+ board/dn-lse/stm32mp157f-dn-som/Kconfig     |  2 +
+ board/dn-lse/stm32mp157f-dn-som/Makefile    |  8 +--
+ build.sh                                    | 10 +++-
+ configs/stm32mp157f_dn_som_defconfig        |  4 +-
+ configs/stm32mp15_basic_defconfig           |  2 +-
+ include/configs/stm32mp157f_dn_som.h        |  9 ++-
+ 10 files changed, 130 insertions(+), 40 deletions(-)
+
+diff --git a/arch/arm/dts/stm32mp15-pinctrl.dtsi b/arch/arm/dts/stm32mp15-pinctrl.dtsi
+index 43eb55cb1f..e5ecedae6b 100644
+--- a/arch/arm/dts/stm32mp15-pinctrl.dtsi
++++ b/arch/arm/dts/stm32mp15-pinctrl.dtsi
+@@ -1594,8 +1594,8 @@
+ 	sdmmc2_d47_pins_a: sdmmc2-d47-0 {
+ 		pins {
+ 			pinmux = <STM32_PINMUX('A', 8, AF9)>, /* SDMMC2_D4 */
+-				 <STM32_PINMUX('A', 9, AF10)>, /* SDMMC2_D5 */
+-				 <STM32_PINMUX('E', 5, AF9)>, /* SDMMC2_D6 */
++				 <STM32_PINMUX('A', 15, AF9)>, /* SDMMC2_D5 */
++				 <STM32_PINMUX('C', 6, AF10)>, /* SDMMC2_D6 */
+ 				 <STM32_PINMUX('D', 3, AF9)>; /* SDMMC2_D7 */
+ 			slew-rate = <1>;
+ 			drive-push-pull;
+@@ -2010,6 +2010,26 @@
+ 		};
+ 	};
+ 
++	usart1_pins_a: usart1-0 {
++		pins1 {
++			pinmux = <STM32_PINMUX('Z', 7, AF7)>; /* USART1_TX */
++			bias-disable;
++			drive-push-pull;
++			slew-rate = <0>;
++		};
++		pins2 {
++			pinmux = <STM32_PINMUX('Z', 6, AF7)>; /* USART2_RX */
++			bias-disable;
++		};
++	};
++
++	usart1_sleep_pins_a: usart1-sleep-0 {
++		pins {
++			pinmux = <STM32_PINMUX('Z', 7, ANALOG)>, /* USART2_TX */
++				 <STM32_PINMUX('Z', 6, ANALOG)>; /* USART2_RX */
++		};
++	};
++
+ 	usart2_pins_a: usart2-0 {
+ 		pins1 {
+ 			pinmux = <STM32_PINMUX('F', 5, AF7)>, /* USART2_TX */
+@@ -2060,15 +2080,13 @@
+ 
+ 	usart2_pins_c: usart2-2 {
+ 		pins1 {
+-			pinmux = <STM32_PINMUX('D', 5, AF7)>, /* USART2_TX */
+-				 <STM32_PINMUX('D', 4, AF7)>; /* USART2_RTS */
++			pinmux = <STM32_PINMUX('D', 5, AF7)>; /* USART2_TX */
+ 			bias-disable;
+ 			drive-push-pull;
+ 			slew-rate = <0>;
+ 		};
+ 		pins2 {
+-			pinmux = <STM32_PINMUX('D', 6, AF7)>, /* USART2_RX */
+-				 <STM32_PINMUX('D', 3, AF7)>; /* USART2_CTS_NSS */
++			pinmux = <STM32_PINMUX('D', 6, AF7)>; /* USART2_RX */
+ 			bias-disable;
+ 		};
+ 	};
+diff --git a/arch/arm/dts/stm32mp157f-dn-som-u-boot.dtsi b/arch/arm/dts/stm32mp157f-dn-som-u-boot.dtsi
+index 6f87c322f3..919e9c2212 100644
+--- a/arch/arm/dts/stm32mp157f-dn-som-u-boot.dtsi
++++ b/arch/arm/dts/stm32mp157f-dn-som-u-boot.dtsi
+@@ -183,7 +183,44 @@
+ 		u-boot,dm-spl;
+ 	};
+ };
++
++&sdmmc2 {
++	u-boot,dm-spl;
++};
++
++&sdmmc2_b4_pins_a {
++	u-boot,dm-spl;
++	pins1 {
++		u-boot,dm-spl;
++	};
++	pins2 {
++		u-boot,dm-spl;
++	};
++};
++
++&sdmmc2_d47_pins_a {
++	u-boot,dm-spl;
++	pins {
++		u-boot,dm-spl;
++	};
++};
++
+ #endif
++&usart1 {
++	u-boot,dm-pre-reloc;
++};
++
++&usart1_pins_a {
++	u-boot,dm-pre-reloc;
++	pins1 {
++		u-boot,dm-pre-reloc;
++	};
++	pins2 {
++		u-boot,dm-pre-reloc;
++		/* pull-up on rx to avoid floating level */
++		bias-pull-up;
++	};
++};
+ 
+ &uart4 {
+ 	u-boot,dm-pre-reloc;
+diff --git a/arch/arm/dts/stm32mp157f-dn-som.dts b/arch/arm/dts/stm32mp157f-dn-som.dts
+index 86a5c46add..8c6a72d850 100644
+--- a/arch/arm/dts/stm32mp157f-dn-som.dts
++++ b/arch/arm/dts/stm32mp157f-dn-som.dts
+@@ -31,6 +31,7 @@
+ 		serial0 = &uart4;
+ 		serial1 = &usart2;
+ 		serial2 = &usart3;
++		/* serial3 = &uart4; */
+ 	};
+ 
+ 	chosen {
+@@ -110,6 +111,20 @@
+ 		};
+ 	};
+ 
++	sd_switch: regulator-sd_switch {
++		compatible = "regulator-gpio";
++		regulator-name = "sd_switch";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <2900000>;
++		regulator-type = "voltage";
++		regulator-always-on;
++
++		gpios = <&gpiof 14 GPIO_ACTIVE_HIGH>;
++		gpios-states = <0>;
++		states = <1800000 0x1>,
++			 <2900000 0x0>;
++	};
++	
+ 	vin: vin {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "vin";
+@@ -210,7 +225,7 @@
+ };
+ 
+ &dsi {
+-	status = "okay";
++	status = "disabled";
+ 
+ 	ports {
+ 		port@0 {
+@@ -303,10 +318,10 @@
+ 			buck3-supply = <&vin>;
+ 			buck4-supply = <&vin>;
+ 			ldo1-supply = <&v3v3>;
+-			ldo2-supply = <&vin>;
++			ldo2-supply = <&v3v3>;
+ 			ldo3-supply = <&vdd_ddr>;
+ 			ldo4-supply = <&vin>;
+-			ldo5-supply = <&vin>;
++			ldo5-supply = <&v3v3>;
+ 			ldo6-supply = <&v3v3>;
+ 			vref_ddr-supply = <&vin>;
+ 			boost-supply = <&vin>;
+@@ -350,19 +365,17 @@
+ 				regulator-initial-mode = <0>;
+ 			};
+ 
+-			v1v8_audio: ldo1 {
+-				regulator-name = "v1v8_audio";
+-				regulator-min-microvolt = <1800000>;
+-				regulator-max-microvolt = <1800000>;
+-				regulator-always-on;
++			vdda: ldo1 {
++				regulator-name = "vdda";
++				regulator-min-microvolt = <2900000>;
++				regulator-max-microvolt = <2900000>;
+ 				interrupts = <IT_CURLIM_LDO1 0>;
+ 			};
+ 
+-			v3v3_hdmi: ldo2 {
+-				regulator-name = "v3v3_hdmi";
+-				regulator-min-microvolt = <3300000>;
+-				regulator-max-microvolt = <3300000>;
+-				regulator-always-on;
++			v2v8: ldo2 {
++				regulator-name = "v2v8";
++				regulator-min-microvolt = <2800000>;
++				regulator-max-microvolt = <2800000>;
+ 				interrupts = <IT_CURLIM_LDO2 0>;
+ 			};
+ 
+@@ -379,19 +392,18 @@
+ 				interrupts = <IT_CURLIM_LDO4 0>;
+ 			};
+ 
+-			vdda: ldo5 {
+-				regulator-name = "vdda";
++			vdd_sd: ldo5 {
++				regulator-name = "vdd_sd";
+ 				regulator-min-microvolt = <2900000>;
+ 				regulator-max-microvolt = <2900000>;
+ 				interrupts = <IT_CURLIM_LDO5 0>;
+ 				regulator-boot-on;
+ 			};
+ 
+-			v1v2_hdmi: ldo6 {
+-				regulator-name = "v1v2_hdmi";
+-				regulator-min-microvolt = <1200000>;
+-				regulator-max-microvolt = <1200000>;
+-				regulator-always-on;
++			v1v8: ldo6 {
++				regulator-name = "v1v8";
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <1800000>;
+ 				interrupts = <IT_CURLIM_LDO6 0>;
+ 			};
+ 
+@@ -458,7 +470,7 @@
+ 	pinctrl-names = "default", "sleep";
+ 	pinctrl-0 = <&ltdc_pins_a>;
+ 	pinctrl-1 = <&ltdc_sleep_pins_a>;
+-	status = "okay";
++	status = "disabled";
+ 
+ 	port {
+ 		ltdc_ep1_out: endpoint@1 {
+@@ -515,7 +527,7 @@
+ };
+ 
+ 
+-&sdmmc2{
++&sdmmc2 {
+ 	pinctrl-names = "default", "opendrain", "sleep";
+ 	pinctrl-0 = <&sdmmc2_b4_pins_a &sdmmc2_d47_pins_a>;
+ 	pinctrl-1 = <&sdmmc2_b4_od_pins_a>;
+@@ -594,6 +606,16 @@
+ 	status = "okay";
+ };
+ 
++&usart1{
++	pinctrl-names = "default", "sleep";
++	pinctrl-0 = <&usart1_pins_a>;
++	pinctrl-1 = <&usart1_sleep_pins_a>;
++	/delete-property/dmas;
++	/delete-property/dma-names;
++	status = "okay";
++
++};
++
+ &usart2{
+ 	pinctrl-names = "default", "sleep";
+ 	pinctrl-0 = <&usart2_pins_c>;
+diff --git a/arch/arm/dts/stm32mp15xx-edx.dtsi b/arch/arm/dts/stm32mp15xx-edx.dtsi
+index 014ce3863d..854ffa1428 100644
+--- a/arch/arm/dts/stm32mp15xx-edx.dtsi
++++ b/arch/arm/dts/stm32mp15xx-edx.dtsi
+@@ -358,7 +358,7 @@
+ 	pinctrl-0 = <&sdmmc1_b4_pins_a &sdmmc1_dir_pins_a>;
+ 	pinctrl-1 = <&sdmmc1_b4_od_pins_a &sdmmc1_dir_pins_a>;
+ 	pinctrl-2 = <&sdmmc1_b4_sleep_pins_a &sdmmc1_dir_sleep_pins_a>;
+-	cd-gpios = <&gpiog 1 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
++	cd-gpios = <&gpiob 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+ 	disable-wp;
+ 	st,sig-dir;
+ 	st,neg-edge;
+diff --git a/board/dn-lse/stm32mp157f-dn-som/Kconfig b/board/dn-lse/stm32mp157f-dn-som/Kconfig
+index 85e8fd5866..aa956cba08 100644
+--- a/board/dn-lse/stm32mp157f-dn-som/Kconfig
++++ b/board/dn-lse/stm32mp157f-dn-som/Kconfig
+@@ -8,5 +8,7 @@ config SYS_VENDOR
+ 
+ config SYS_CONFIG_NAME
+ 	default "stm32mp157f_dn_som"
++
++source "board/st/common/Kconfig"
+ 	
+ endif
+diff --git a/board/dn-lse/stm32mp157f-dn-som/Makefile b/board/dn-lse/stm32mp157f-dn-som/Makefile
+index 91e01ac64e..b32452e1ae 100644
+--- a/board/dn-lse/stm32mp157f-dn-som/Makefile
++++ b/board/dn-lse/stm32mp157f-dn-som/Makefile
+@@ -5,7 +5,7 @@
+ 
+ 
+ obj-y += stm32mp157f-dn-som.o
+-# ifeq ($(CONFIG_ARCH_STM32MP),y)
+-# obj-$(CONFIG_SYS_MTDPARTS_RUNTIME) += ../../st/common/stm32mp_mtdparts.o
+-# obj-$(CONFIG_SET_DFU_ALT_INFO) += ../../st/common/stm32mp_dfu.o
+-# endif
++ifeq ($(CONFIG_ARCH_STM32MP),y)
++obj-$(CONFIG_SYS_MTDPARTS_RUNTIME) += ../../st/common/stm32mp_mtdparts.o
++obj-$(CONFIG_SET_DFU_ALT_INFO) += ../../st/common/stm32mp_dfu.o
++endif
+diff --git a/build.sh b/build.sh
+index ee7649556c..10275adf63 100755
+--- a/build.sh
++++ b/build.sh
+@@ -1,5 +1,9 @@
+ #! /bin/sh
+-export DEVICE_TREE=stm32mp157f-dn-som 
+-export KBUILD_OUTPUT=../build/stm32mp1_uboot
+-make stm32mp157f_dn_som_defconfig 
++
++export DEVICE_TREE=stm32mp157f-dn-som
++export KBUILD_OUTPUT=../build/stm32mp1/uboot
++make stm32mp157f_dn_som_defconfig
++#make stm32mp15_defconfig
+ make all
++
++fiptool update --tos-fw ../build/stm32mp1/release/bl32.bin --fw-config ../build/stm32mp1/release/fdts/stm32mp157f-dn-som-fw-config.dtb --hw-config ../build/stm32mp1/uboot/u-boot.dtb --nt-fw ../build/stm32mp1/uboot/u-boot-nodtb.bin /home/pantoja/diebold/som/yocto/dn-som/tmp/deploy/images/stm32mp1/fip/fip-stm32mp157f-ev1-trusted.bin
+\ No newline at end of file
+diff --git a/configs/stm32mp157f_dn_som_defconfig b/configs/stm32mp157f_dn_som_defconfig
+index 1a6e902c77..b9d946b037 100644
+--- a/configs/stm32mp157f_dn_som_defconfig
++++ b/configs/stm32mp157f_dn_som_defconfig
+@@ -61,7 +61,7 @@ CONFIG_SYS_RELOC_GD_ENV_ADDR=y
+ CONFIG_SYS_MMC_ENV_DEV=-1
+ CONFIG_STM32_ADC=y
+ CONFIG_CLK_SCMI=y
+-# CONFIG_SET_DFU_ALT_INFO=y
++CONFIG_SET_DFU_ALT_INFO=y
+ CONFIG_USB_FUNCTION_FASTBOOT=y
+ CONFIG_FASTBOOT_BUF_ADDR=0xC0000000
+ CONFIG_FASTBOOT_BUF_SIZE=0x02000000
+@@ -88,7 +88,7 @@ CONFIG_SUPPORT_EMMC_BOOT=y
+ CONFIG_STM32_SDMMC2=y
+ CONFIG_MTD=y
+ CONFIG_DM_MTD=y
+-# CONFIG_SYS_MTDPARTS_RUNTIME=y
++CONFIG_SYS_MTDPARTS_RUNTIME=y
+ CONFIG_MTD_RAW_NAND=y
+ CONFIG_NAND_STM32_FMC2=y
+ CONFIG_MTD_SPI_NAND=y
+diff --git a/configs/stm32mp15_basic_defconfig b/configs/stm32mp15_basic_defconfig
+index 9cd37aa722..ef20d4472a 100644
+--- a/configs/stm32mp15_basic_defconfig
++++ b/configs/stm32mp15_basic_defconfig
+@@ -6,7 +6,7 @@ CONFIG_SYS_MEMTEST_END=0xc4000000
+ CONFIG_ENV_OFFSET=0x280000
+ CONFIG_ENV_SECT_SIZE=0x40000
+ CONFIG_SPL_DM_SPI=y
+-CONFIG_DEFAULT_DEVICE_TREE="stm32mp157c-ev1"
++CONFIG_DEFAULT_DEVICE_TREE="stm32mp157f-ev1"
+ CONFIG_SPL_TEXT_BASE=0x2FFC2500
+ CONFIG_SPL_MMC_SUPPORT=y
+ CONFIG_SPL=y
+diff --git a/include/configs/stm32mp157f_dn_som.h b/include/configs/stm32mp157f_dn_som.h
+index 8569c369e5..d3b1e970c9 100644
+--- a/include/configs/stm32mp157f_dn_som.h
++++ b/include/configs/stm32mp157f_dn_som.h
+@@ -11,7 +11,14 @@
+ #define STM32MP_BOARD_EXTRA_ENV \
+ 	"usb_pgood_delay=1000\0" \
+ 	"console=ttySTM0\0" \
+-	"developer=MateusPantoja\0"
++	"sdboot=env set boot_instance \"0 \";" \
++			 "env set boot_prefixes \"/mmc0_\";" \
++			 "env set boot_targets \"mmc0\";" \
++			 "run bootcmd\0" \
++	"emmcboot=env set boot_instance \"1 \";" \
++			 "env set boot_prefixes \"/mmc1_\";" \
++			 "env set boot_targets \"mmc1\";" \
++			 "run bootcmd\0"
+ 
+ #include <configs/stm32mp15_common.h>
+ 
+-- 
+2.34.1
+

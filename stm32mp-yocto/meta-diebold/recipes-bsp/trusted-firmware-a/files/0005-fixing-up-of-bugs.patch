@@ -1,0 +1,30 @@
+From dabd1a87139a13927eb0553875c3468a9ed240e7 Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mateuspantoja9@gmail.com>
+Date: Thu, 4 May 2023 22:23:26 -0500
+Subject: [PATCH 5/8] fixing up of bugs
+
+---
+ fdts/stm32mp15xx-edx.dtsi | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/fdts/stm32mp15xx-edx.dtsi b/fdts/stm32mp15xx-edx.dtsi
+index abda6e847..c0821dc62 100644
+--- a/fdts/stm32mp15xx-edx.dtsi
++++ b/fdts/stm32mp15xx-edx.dtsi
+@@ -283,10 +283,12 @@
+ 	};
+ 
+ 	/* VCO = 594.0 MHz => P = 99, Q = 74, R = 74 */
++	/* VCO = 600.0 MHz => P = 25, Q = 50, R = 50 */
+ 	pll4: st,pll@3 {
+ 		compatible = "st,stm32mp1-pll";
+ 		reg = <3>;
+-		cfg = <3 98 5 7 7 PQR(1,1,1)>;
++		// cfg = <3 98 5 7 7 PQR(1,1,1)>;
++		cfg = < 1 49 23 11 11 PQR(1,1,1) >;
+ 	};
+ };
+ 
+-- 
+2.34.1
+

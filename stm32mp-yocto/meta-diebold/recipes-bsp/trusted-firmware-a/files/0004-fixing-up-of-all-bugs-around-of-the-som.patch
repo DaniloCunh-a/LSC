@@ -1,0 +1,896 @@
+From b336d177f74afd9a69be591aebebf940c10b846c Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mateuspantoja9@gmail.com>
+Date: Wed, 3 May 2023 00:28:12 -0500
+Subject: [PATCH 4/8] fixing up of all bugs around of the som
+
+---
+ build-emmc.sh                      |  16 +
+ build-sd.sh                        |  16 +
+ build-usb.sh                       |  16 +
+ build.sh                           |   6 +-
+ fdts/.vscode-ctags                 | 604 +++++++++++++++++++++++++++++
+ fdts/stm32mp15-pinctrl.dtsi        |  17 +-
+ fdts/stm32mp157f-dn-som.dts        |   2 +-
+ fdts/stm32mp157f-ev1-fw-config.dts |   2 +-
+ fdts/stm32mp15xx-dkx.dtsi          |   6 +
+ fdts/stm32mp15xx-edx.dtsi          |  23 +-
+ fdts/stm32mp15xx-evx.dtsi          |   7 +-
+ 11 files changed, 696 insertions(+), 19 deletions(-)
+ create mode 100755 build-emmc.sh
+ create mode 100755 build-sd.sh
+ create mode 100755 build-usb.sh
+ create mode 100644 fdts/.vscode-ctags
+
+diff --git a/build-emmc.sh b/build-emmc.sh
+new file mode 100755
+index 000000000..78598c372
+--- /dev/null
++++ b/build-emmc.sh
+@@ -0,0 +1,16 @@
++#! /bin/sh
++
++unset LDFLAGS;
++unset CFLAGS;
++
++# STM32MP_USB_PROGRAMMER=1
++# STM32MP_SDMMC=1
++# STM32MP_EMMC=1
++
++rm -r ../build/stm32mp1/release/
++
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_EMMC=1 STM32MP15=1 
++
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb AARCH32_SP=sp_min bl32 dtbs
++
++cp ../build/stm32mp1/release/tf-a-stm32mp157f-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp157f-ev1-emmc.stm32
+\ No newline at end of file
+diff --git a/build-sd.sh b/build-sd.sh
+new file mode 100755
+index 000000000..83089c48b
+--- /dev/null
++++ b/build-sd.sh
+@@ -0,0 +1,16 @@
++#! /bin/sh
++
++unset LDFLAGS;
++unset CFLAGS;
++
++# STM32MP_USB_PROGRAMMER=1
++# STM32MP_SDMMC=1
++# STM32MP_EMMC=1
++
++rm -r ../build/stm32mp1/release/
++
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_SDMMC=1 STM32MP15=1 
++
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb AARCH32_SP=sp_min bl32 dtbs
++
++cp ../build/stm32mp1/release/tf-a-stm32mp157f-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp157f-ev1-sdcard.stm32
+\ No newline at end of file
+diff --git a/build-usb.sh b/build-usb.sh
+new file mode 100755
+index 000000000..858ecdf3d
+--- /dev/null
++++ b/build-usb.sh
+@@ -0,0 +1,16 @@
++#! /bin/sh
++
++unset LDFLAGS;
++unset CFLAGS;
++
++# STM32MP_USB_PROGRAMMER=1
++# STM32MP_SDMMC=1
++# STM32MP_EMMC=1
++
++rm -r ../build/stm32mp1/release/
++
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_USB_PROGRAMMER=1 STM32MP15=1 
++
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb AARCH32_SP=sp_min bl32 dtbs
++
++cp ../build/stm32mp1/release/tf-a-stm32mp157f-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp157f-ev1-usb.stm32
+\ No newline at end of file
+diff --git a/build.sh b/build.sh
+index 8ae1961d2..5a3f5845c 100755
+--- a/build.sh
++++ b/build.sh
+@@ -3,8 +3,12 @@
+ unset LDFLAGS;
+ unset CFLAGS;
+ 
++# STM32MP_USB_PROGRAMMER=1
++# STM32MP_SDMMC=1
++# STM32MP_EMMC=1
+ 
++# rm -r ../build/stm32mp1/release/
+ 
+-make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_SDMMC=1 STM32MP_EMMC=1 STM32MP15=1 
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_USB_PROGRAMMER=1 STM32MP15=1 
+ 
+ make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb AARCH32_SP=sp_min bl32 dtbs
+\ No newline at end of file
+diff --git a/fdts/.vscode-ctags b/fdts/.vscode-ctags
+new file mode 100644
+index 000000000..2a1b5ec15
+--- /dev/null
++++ b/fdts/.vscode-ctags
+@@ -0,0 +1,604 @@
++!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
++!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
++!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
++!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
++!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
++!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
++!_TAG_PROGRAM_VERSION	0.0.0	//
++CLUSTER_SLEEP_0	fvp-base-gicv2-psci-aarch32.dts	/^			CLUSTER_SLEEP_0: cluster-sleep-0 {$/;"	l
++CLUSTER_SLEEP_0	fvp-base-gicv2-psci.dts	/^			CLUSTER_SLEEP_0: cluster-sleep-0 {$/;"	l
++CLUSTER_SLEEP_0	fvp-base-gicv3-psci-aarch32-common.dtsi	/^			CLUSTER_SLEEP_0: cluster-sleep-0 {$/;"	l
++CLUSTER_SLEEP_0	fvp-base-gicv3-psci-common.dtsi	/^			CLUSTER_SLEEP_0: cluster-sleep-0 {$/;"	l
++CLUSTER_SLEEP_0	fvp-foundation-gicv2-psci.dts	/^			CLUSTER_SLEEP_0: cluster-sleep-0 {$/;"	l
++CLUSTER_SLEEP_0	fvp-foundation-gicv3-psci.dts	/^			CLUSTER_SLEEP_0: cluster-sleep-0 {$/;"	l
++CLUSTER_SLEEP_0	tc.dts	/^			CLUSTER_SLEEP_0: cluster-sleep-0 {$/;"	l
++CPU0	fvp-defs.dtsi	/^	CPU0:cpu@0 {	\\$/;"	l
++CPU0	fvp-defs.dtsi	/^	CPU0:cpu@0 {	\\$/;"	l	label:CPU0
++CPU0	morello-fvp.dts	/^		CPU0: cpu0@0 {$/;"	l
++CPU0	tc.dts	/^		CPU0:cpu@0 {$/;"	l
++CPU1	morello-fvp.dts	/^		CPU1: cpu1@100 {$/;"	l
++CPU1	tc.dts	/^		CPU1:cpu@100 {$/;"	l
++CPU2	morello-fvp.dts	/^		CPU2: cpu2@10000 {$/;"	l
++CPU2	tc.dts	/^		CPU2:cpu@200 {$/;"	l
++CPU3	morello-fvp.dts	/^		CPU3: cpu3@10100 {$/;"	l
++CPU3	tc.dts	/^		CPU3:cpu@300 {$/;"	l
++CPU4	tc.dts	/^		CPU4:cpu@400 {$/;"	l
++CPU5	tc.dts	/^		CPU5:cpu@500 {$/;"	l
++CPU6	tc.dts	/^		CPU6:cpu@600 {$/;"	l
++CPU7	tc.dts	/^		CPU7:cpu@700 {$/;"	l
++CPU_SLEEP_0	fvp-base-gicv2-psci-aarch32.dts	/^			CPU_SLEEP_0: cpu-sleep-0 {$/;"	l
++CPU_SLEEP_0	fvp-base-gicv2-psci.dts	/^			CPU_SLEEP_0: cpu-sleep-0 {$/;"	l
++CPU_SLEEP_0	fvp-base-gicv3-psci-aarch32-common.dtsi	/^			CPU_SLEEP_0: cpu-sleep-0 {$/;"	l
++CPU_SLEEP_0	fvp-base-gicv3-psci-common.dtsi	/^			CPU_SLEEP_0: cpu-sleep-0 {$/;"	l
++CPU_SLEEP_0	fvp-foundation-gicv2-psci.dts	/^			CPU_SLEEP_0: cpu-sleep-0 {$/;"	l
++CPU_SLEEP_0	fvp-foundation-gicv3-psci.dts	/^			CPU_SLEEP_0: cpu-sleep-0 {$/;"	l
++CPU_SLEEP_0	tc.dts	/^			CPU_SLEEP_0: cpu-sleep-0 {$/;"	l
++L2	a5ds.dts	/^	L2: cache-controller@1C010000 {$/;"	l
++L2_0	corstone700.dtsi	/^	L2_0: l2-cache0 {$/;"	l
++L2_0	fvp-base-gicv2-psci-aarch32.dts	/^		L2_0: l2-cache0 {$/;"	l
++L2_0	fvp-base-gicv2-psci.dts	/^		L2_0: l2-cache0 {$/;"	l
++L2_0	fvp-base-gicv3-psci-aarch32-common.dtsi	/^		L2_0: l2-cache0 {$/;"	l
++L2_0	fvp-base-gicv3-psci-common.dtsi	/^		L2_0: l2-cache0 {$/;"	l
++L2_0	fvp-foundation-gicv2-psci.dts	/^		L2_0: l2-cache0 {$/;"	l
++L2_0	fvp-foundation-gicv3-psci.dts	/^		L2_0: l2-cache0 {$/;"	l
++amu	tc.dts	/^			amu: amu-0 {$/;"	l
++board_id	stm32mp135f-dk.dts	/^	board_id: board_id@f0 {$/;"	l
++board_id	stm32mp157c-odyssey-som.dtsi	/^	board_id: board_id@ec {$/;"	l
++board_id	stm32mp15xx-dkx.dtsi	/^	board_id: board_id@ec {$/;"	l
++board_id	stm32mp15xx-edx.dtsi	/^	board_id: board_id@ec {$/;"	l
++board_id	stm32mp15xx-osd32.dtsi	/^	board_id: board_id@ec {$/;"	l
++bp_clock24mhz	morello-fvp.dts	/^	bp_clock24mhz: clock24mhz {$/;"	l
++bp_clock24mhz	tc.dts	/^	bp_clock24mhz: clock24mhz {$/;"	l
++bsec	stm32mp131.dtsi	/^		bsec: efuse@5c005000 {$/;"	l
++bsec	stm32mp151.dtsi	/^		bsec: efuse@5c005000 {$/;"	l
++bst_out	stm32mp135f-dk.dts	/^			bst_out: boost {$/;"	l	label:pmic
++bst_out	stm32mp157a-avenger96.dts	/^			bst_out: boost {$/;"	l	label:pmic
++bst_out	stm32mp157c-odyssey-som.dtsi	/^			bst_out: boost {$/;"	l	label:pmic
++bst_out	stm32mp15xx-dkx.dtsi	/^			bst_out: boost {$/;"	l	label:pmic
++bst_out	stm32mp15xx-edx.dtsi	/^			bst_out: boost {$/;"	l	label:pmic
++bst_out	stm32mp15xx-osd32.dtsi	/^			bst_out: boost {$/;"	l	label:pmic
++bus_refclk	arm_fpga.dts	/^	bus_refclk: refclk {$/;"	l
++ccix_pcie_ctlr	n1sdp.dtsi	/^		ccix_pcie_ctlr: pcie@68000000 {$/;"	l
++cfg0_otp	stm32mp13-ssp-bl2.dtsi	/^			cfg0_otp: cfg0_otp@0 {$/;"	l
++cfg0_otp	stm32mp131.dtsi	/^			cfg0_otp: cfg0_otp@0 {$/;"	l	label:bsec
++cfg0_otp	stm32mp151.dtsi	/^			cfg0_otp: cfg0_otp@0 {$/;"	l	label:bsec
++cfg2_otp	stm32mp13-ssp-bl2.dtsi	/^			cfg2_otp: cfg2_otp@8 {$/;"	l
++cfg2_otp	stm32mp15-ssp-bl2.dtsi	/^			cfg2_otp: cfg2_otp@8 {$/;"	l
++chip_otp	stm32mp13-ssp-bl2.dtsi	/^			chip_otp: chip_otp@a0 {$/;"	l
++chip_otp	stm32mp15-ssp-bl2.dtsi	/^			chip_otp: chip_otp@a0 {$/;"	l
++clk_csi	stm32mp131.dtsi	/^		clk_csi: clk-csi {$/;"	l
++clk_csi	stm32mp151.dtsi	/^		clk_csi: clk-csi {$/;"	l
++clk_hse	stm32mp131.dtsi	/^		clk_hse: clk-hse {$/;"	l
++clk_hse	stm32mp151.dtsi	/^		clk_hse: clk-hse {$/;"	l
++clk_hsi	stm32mp131.dtsi	/^		clk_hsi: clk-hsi {$/;"	l
++clk_hsi	stm32mp151.dtsi	/^		clk_hsi: clk-hsi {$/;"	l
++clk_lse	stm32mp131.dtsi	/^		clk_lse: clk-lse {$/;"	l
++clk_lse	stm32mp151.dtsi	/^		clk_lse: clk-lse {$/;"	l
++clk_lsi	stm32mp131.dtsi	/^		clk_lsi: clk-lsi {$/;"	l
++clk_lsi	stm32mp151.dtsi	/^		clk_lsi: clk-lsi {$/;"	l
++cpu0	stm32mp131.dtsi	/^		cpu0: cpu@0 {$/;"	l
++cpu0	stm32mp151.dtsi	/^		cpu0: cpu@0 {$/;"	l
++cpu0_opp_table	stm32mp151.dtsi	/^	cpu0_opp_table: cpu0-opp-table {$/;"	l
++cpu1	stm32mp153.dtsi	/^		cpu1: cpu@1 {$/;"	l
++cpu_scp_hpri0	morello.dtsi	/^		cpu_scp_hpri0: scp-shmem@0 {$/;"	l	label:sram
++cpu_scp_hpri1	morello.dtsi	/^		cpu_scp_hpri1: scp-shmem@80 {$/;"	l	label:sram
++cpu_scp_scmi_mem	tc.dts	/^		cpu_scp_scmi_mem: scp-shmem@0 {$/;"	l	label:sram
++cryp1	stm32mp15xc.dtsi	/^		cryp1: cryp@54001000 {$/;"	l
++cryp1	stm32mp15xf.dtsi	/^		cryp1: cryp@54001000 {$/;"	l
++dbg_uart	arm_fpga.dts	/^	dbg_uart: serial@7ff80000 {$/;"	l
++ddr	stm32mp131.dtsi	/^		ddr: ddr@5a003000{$/;"	l
++ddr	stm32mp151.dtsi	/^		ddr: ddr@5a003000{$/;"	l
++dp0	tc.dts	/^	dp0: display@2cc00000 {$/;"	l
++dp_pl0_out0	tc.dts	/^					dp_pl0_out0: endpoint {$/;"	l	label:dp0.pl0
++enckey_otp	stm32mp131.dtsi	/^			enckey_otp: enckey_otp@170 {$/;"	l	label:bsec
++ethernet	corstone700_fpga.dts	/^	ethernet: eth@40100000 {$/;"	l
++ethernet	corstone700_fvp.dts	/^	ethernet: eth@4010000 {$/;"	l
++ethernet_mac_address	stm32mp151.dtsi	/^			ethernet_mac_address: mac@e4 {$/;"	l	label:bsec
++ethosn0	juno-ethosn.dtsi	/^	ethosn0: ethosn@6f300000 {$/;"	l
++etzpc	stm32mp151.dtsi	/^		etzpc: etzpc@5c007000 {$/;"	l
++exti	stm32mp131.dtsi	/^		exti: interrupt-controller@5000d000 {$/;"	l
++exti	stm32mp151.dtsi	/^		exti: interrupt-controller@5000d000 {$/;"	l
++exti_pwr	stm32mp151.dtsi	/^			exti_pwr: exti-pwr {$/;"	l	label:exti
++extsys0	corstone700.dtsi	/^	extsys0: extsys@1A010310 {$/;"	l
++fake_hdlcd_clk	tc.dts	/^	fake_hdlcd_clk: fake-hdlcd-clk {$/;"	l
++fixed_3v3	tc.dts	/^	fixed_3v3: v2m-3v3 {$/;"	l
++flash0	stm32mp15xx-evx.dtsi	/^	flash0: mx66l51235l@0 {$/;"	l
++fmc	stm32mp131.dtsi	/^		fmc: memory-controller@58002000 {$/;"	l
++fmc	stm32mp151.dtsi	/^		fmc: memory-controller@58002000 {$/;"	l
++fmc_pins_a	stm32mp15-pinctrl.dtsi	/^	fmc_pins_a: fmc-0 {$/;"	l
++fw_config_hash	cot_descriptors.dtsi	/^			fw_config_hash: fw_config_hash {$/;"	l	label:trusted_boot_fw_cert
++fw_config_hash	stm32mp1-cot-descriptors.dtsi	/^			fw_config_hash: fw_config_hash {$/;"	l	label:stm32mp_cfg_cert
++gic	a5ds.dts	/^	gic: interrupt-controller@1c001000 {$/;"	l
++gic	arm_fpga.dts	/^	gic: interrupt-controller@30000000 {$/;"	l
++gic	corstone700.dtsi	/^	gic: interrupt-controller@1c000000 {$/;"	l
++gic	fvp-base-gicv2-psci-aarch32.dts	/^	gic: interrupt-controller@2f000000 {$/;"	l
++gic	fvp-base-gicv2-psci.dts	/^	gic: interrupt-controller@2f000000 {$/;"	l
++gic	fvp-base-gicv3-psci-aarch32-common.dtsi	/^	gic: interrupt-controller@2f000000 {$/;"	l
++gic	fvp-base-gicv3-psci-common.dtsi	/^	gic: interrupt-controller@2f000000 {$/;"	l
++gic	fvp-foundation-gicv2-psci.dts	/^	gic: interrupt-controller@2f000000 {$/;"	l
++gic	fvp-foundation-gicv3-psci.dts	/^	gic: interrupt-controller@2f000000 {$/;"	l
++gic	fvp-ve-Cortex-A5x1.dts	/^	gic: interrupt-controller@2c001000 {$/;"	l
++gic	fvp-ve-Cortex-A7x1.dts	/^	gic: interrupt-controller@2c001000 {$/;"	l
++gic	morello.dtsi	/^	gic: interrupt-controller@2c010000 {$/;"	l
++gic	n1sdp.dtsi	/^		gic: interrupt-controller@30000000 {$/;"	l
++gic	tc.dts	/^	gic: interrupt-controller@2c010000 {$/;"	l
++gpioa	stm32mp131.dtsi	/^			gpioa: gpio@50002000 {$/;"	l	label:pinctrl
++gpioa	stm32mp151.dtsi	/^			gpioa: gpio@50002000 {$/;"	l	label:pinctrl
++gpioa	stm32mp15xxaa-pinctrl.dtsi	/^	gpioa: gpio@50002000 {$/;"	l
++gpioa	stm32mp15xxab-pinctrl.dtsi	/^	gpioa: gpio@50002000 {$/;"	l
++gpioa	stm32mp15xxac-pinctrl.dtsi	/^	gpioa: gpio@50002000 {$/;"	l
++gpioa	stm32mp15xxad-pinctrl.dtsi	/^	gpioa: gpio@50002000 {$/;"	l
++gpiob	stm32mp131.dtsi	/^			gpiob: gpio@50003000 {$/;"	l	label:pinctrl
++gpiob	stm32mp151.dtsi	/^			gpiob: gpio@50003000 {$/;"	l	label:pinctrl
++gpiob	stm32mp15xxaa-pinctrl.dtsi	/^	gpiob: gpio@50003000 {$/;"	l
++gpiob	stm32mp15xxab-pinctrl.dtsi	/^	gpiob: gpio@50003000 {$/;"	l
++gpiob	stm32mp15xxac-pinctrl.dtsi	/^	gpiob: gpio@50003000 {$/;"	l
++gpiob	stm32mp15xxad-pinctrl.dtsi	/^	gpiob: gpio@50003000 {$/;"	l
++gpioc	stm32mp131.dtsi	/^			gpioc: gpio@50004000 {$/;"	l	label:pinctrl
++gpioc	stm32mp151.dtsi	/^			gpioc: gpio@50004000 {$/;"	l	label:pinctrl
++gpioc	stm32mp15xxaa-pinctrl.dtsi	/^	gpioc: gpio@50004000 {$/;"	l
++gpioc	stm32mp15xxab-pinctrl.dtsi	/^	gpioc: gpio@50004000 {$/;"	l
++gpioc	stm32mp15xxac-pinctrl.dtsi	/^	gpioc: gpio@50004000 {$/;"	l
++gpioc	stm32mp15xxad-pinctrl.dtsi	/^	gpioc: gpio@50004000 {$/;"	l
++gpiod	stm32mp131.dtsi	/^			gpiod: gpio@50005000 {$/;"	l	label:pinctrl
++gpiod	stm32mp151.dtsi	/^			gpiod: gpio@50005000 {$/;"	l	label:pinctrl
++gpiod	stm32mp15xxaa-pinctrl.dtsi	/^	gpiod: gpio@50005000 {$/;"	l
++gpiod	stm32mp15xxab-pinctrl.dtsi	/^	gpiod: gpio@50005000 {$/;"	l
++gpiod	stm32mp15xxac-pinctrl.dtsi	/^	gpiod: gpio@50005000 {$/;"	l
++gpiod	stm32mp15xxad-pinctrl.dtsi	/^	gpiod: gpio@50005000 {$/;"	l
++gpioe	stm32mp131.dtsi	/^			gpioe: gpio@50006000 {$/;"	l	label:pinctrl
++gpioe	stm32mp151.dtsi	/^			gpioe: gpio@50006000 {$/;"	l	label:pinctrl
++gpioe	stm32mp15xxaa-pinctrl.dtsi	/^	gpioe: gpio@50006000 {$/;"	l
++gpioe	stm32mp15xxab-pinctrl.dtsi	/^	gpioe: gpio@50006000 {$/;"	l
++gpioe	stm32mp15xxac-pinctrl.dtsi	/^	gpioe: gpio@50006000 {$/;"	l
++gpioe	stm32mp15xxad-pinctrl.dtsi	/^	gpioe: gpio@50006000 {$/;"	l
++gpiof	stm32mp131.dtsi	/^			gpiof: gpio@50007000 {$/;"	l	label:pinctrl
++gpiof	stm32mp151.dtsi	/^			gpiof: gpio@50007000 {$/;"	l	label:pinctrl
++gpiof	stm32mp15xxaa-pinctrl.dtsi	/^	gpiof: gpio@50007000 {$/;"	l
++gpiof	stm32mp15xxab-pinctrl.dtsi	/^	gpiof: gpio@50007000 {$/;"	l
++gpiof	stm32mp15xxac-pinctrl.dtsi	/^	gpiof: gpio@50007000 {$/;"	l
++gpiof	stm32mp15xxad-pinctrl.dtsi	/^	gpiof: gpio@50007000 {$/;"	l
++gpiog	stm32mp131.dtsi	/^			gpiog: gpio@50008000 {$/;"	l	label:pinctrl
++gpiog	stm32mp151.dtsi	/^			gpiog: gpio@50008000 {$/;"	l	label:pinctrl
++gpiog	stm32mp15xxaa-pinctrl.dtsi	/^	gpiog: gpio@50008000 {$/;"	l
++gpiog	stm32mp15xxab-pinctrl.dtsi	/^	gpiog: gpio@50008000 {$/;"	l
++gpiog	stm32mp15xxac-pinctrl.dtsi	/^	gpiog: gpio@50008000 {$/;"	l
++gpiog	stm32mp15xxad-pinctrl.dtsi	/^	gpiog: gpio@50008000 {$/;"	l
++gpioh	stm32mp131.dtsi	/^			gpioh: gpio@50009000 {$/;"	l	label:pinctrl
++gpioh	stm32mp151.dtsi	/^			gpioh: gpio@50009000 {$/;"	l	label:pinctrl
++gpioh	stm32mp15xxaa-pinctrl.dtsi	/^	gpioh: gpio@50009000 {$/;"	l
++gpioh	stm32mp15xxab-pinctrl.dtsi	/^	gpioh: gpio@50009000 {$/;"	l
++gpioh	stm32mp15xxac-pinctrl.dtsi	/^	gpioh: gpio@50009000 {$/;"	l
++gpioh	stm32mp15xxad-pinctrl.dtsi	/^	gpioh: gpio@50009000 {$/;"	l
++gpioi	stm32mp131.dtsi	/^			gpioi: gpio@5000a000 {$/;"	l	label:pinctrl
++gpioi	stm32mp151.dtsi	/^			gpioi: gpio@5000a000 {$/;"	l	label:pinctrl
++gpioi	stm32mp15xxaa-pinctrl.dtsi	/^	gpioi: gpio@5000a000 {$/;"	l
++gpioi	stm32mp15xxac-pinctrl.dtsi	/^	gpioi: gpio@5000a000 {$/;"	l
++gpioj	stm32mp151.dtsi	/^			gpioj: gpio@5000b000 {$/;"	l	label:pinctrl
++gpioj	stm32mp15xxaa-pinctrl.dtsi	/^	gpioj: gpio@5000b000 {$/;"	l
++gpiok	stm32mp151.dtsi	/^			gpiok: gpio@5000c000 {$/;"	l	label:pinctrl
++gpiok	stm32mp15xxaa-pinctrl.dtsi	/^	gpiok: gpio@5000c000 {$/;"	l
++gpioz	stm32mp151.dtsi	/^			gpioz: gpio@54004000 {$/;"	l	label:pinctrl_z
++gpioz	stm32mp15xxaa-pinctrl.dtsi	/^	gpioz: gpio@54004000 {$/;"	l
++gpioz	stm32mp15xxac-pinctrl.dtsi	/^	gpioz: gpio@54004000 {$/;"	l
++hash	stm32mp131.dtsi	/^		hash: hash@54003000 {$/;"	l
++hash1	stm32mp151.dtsi	/^		hash1: hash@54002000 {$/;"	l
++hdlcd	n1sdp-single-chip.dts	/^	hdlcd: hdlcd@1c050000 {$/;"	l
++hdlcd	tc.dts	/^	hdlcd: hdlcd@7ff60000 {$/;"	l
++hdlcd0_output	n1sdp-single-chip.dts	/^			hdlcd0_output: endpoint {$/;"	l	label:hdlcd
++hdlcd_out	tc.dts	/^			hdlcd_out: endpoint {$/;"	l	label:hdlcd
++hw2_otp	stm32mp131.dtsi	/^			hw2_otp: hw2_otp@48 {$/;"	l	label:bsec
++hw2_otp	stm32mp151.dtsi	/^			hw2_otp: hw2_otp@48 {$/;"	l	label:bsec
++hw_config_hash	cot_descriptors.dtsi	/^			hw_config_hash: hw_config_hash {$/;"	l	label:trusted_boot_fw_cert
++hw_config_hash	stm32mp1-cot-descriptors.dtsi	/^			hw_config_hash: hw_config_hash {$/;"	l	label:stm32mp_cfg_cert
++i2c2	stm32mp151.dtsi	/^		i2c2: i2c@40013000 {$/;"	l
++i2c2_pins_a	stm32mp15-pinctrl.dtsi	/^	i2c2_pins_a: i2c2-0 {$/;"	l
++i2c3	stm32mp131.dtsi	/^		i2c3: i2c@4c004000 {$/;"	l
++i2c4	stm32mp131.dtsi	/^		i2c4: i2c@4c005000 {$/;"	l
++i2c4	stm32mp151.dtsi	/^		i2c4: i2c@5c002000 {$/;"	l
++i2c4_pins_a	stm32mp13-pinctrl.dtsi	/^	i2c4_pins_a: i2c4-0 {$/;"	l
++i2c4_pins_a	stm32mp15-pinctrl.dtsi	/^	i2c4_pins_a: i2c4-0 {$/;"	l
++i2c5	stm32mp131.dtsi	/^		i2c5: i2c@4c006000 {$/;"	l
++i2c6	stm32mp151.dtsi	/^		i2c6: i2c@5c009000 {$/;"	l
++intc	stm32mp131.dtsi	/^	intc: interrupt-controller@a0021000 {$/;"	l
++intc	stm32mp151.dtsi	/^	intc: interrupt-controller@a0021000 {$/;"	l
++its	arm_fpga.dts	/^		its: msi-controller@30040000 {$/;"	l	label:gic
++its	fvp-base-gicv3-psci-aarch32-common.dtsi	/^		its: its@2f020000 {$/;"	l	label:gic
++its	fvp-base-gicv3-psci-common.dtsi	/^		its: its@2f020000 {$/;"	l	label:gic
++its	fvp-foundation-gicv3-psci.dts	/^		its: its@2f020000 {$/;"	l	label:gic
++its1	n1sdp.dtsi	/^			its1: its@30040000 {$/;"	l	label:gic
++its2	n1sdp.dtsi	/^			its2: its@30060000 {$/;"	l	label:gic
++its2_slave	n1sdp-multi-chip.dts	/^	its2_slave: its@40030060000 {$/;"	l
++its_ccix	n1sdp.dtsi	/^			its_ccix: its@30080000 {$/;"	l	label:gic
++its_pcie	n1sdp.dtsi	/^			its_pcie: its@300a0000 {$/;"	l	label:gic
++its_slave_pcie	n1sdp-multi-chip.dts	/^	its_slave_pcie: its@400300a0000 {$/;"	l
++iwdg1	stm32mp131.dtsi	/^		iwdg1: watchdog@5c003000 {$/;"	l
++iwdg1	stm32mp151.dtsi	/^		iwdg1: watchdog@5c003000 {$/;"	l
++iwdg2	stm32mp131.dtsi	/^		iwdg2: watchdog@5a002000 {$/;"	l
++iwdg2	stm32mp151.dtsi	/^		iwdg2: watchdog@5a002000 {$/;"	l
++mac_addr	stm32mp131.dtsi	/^			mac_addr: mac_addr@e4 {$/;"	l	label:bsec
++mailbox	morello.dtsi	/^	mailbox: mhu@45000000 {$/;"	l
++mbox_db_rx	tc.dts	/^	mbox_db_rx: mhu@45010000 {$/;"	l
++mbox_db_tx	tc.dts	/^	mbox_db_tx: mhu@45000000 {$/;"	l
++mbox_es0mhu0	corstone700.dtsi	/^	mbox_es0mhu0: mhu@1b000000 {$/;"	l
++mbox_es0mhu1	corstone700.dtsi	/^	mbox_es0mhu1: mhu@1b020000 {$/;"	l
++mbox_semhu1	corstone700.dtsi	/^	mbox_semhu1: mhu@1b820000 {$/;"	l
++monotonic_otp	stm32mp131.dtsi	/^			monotonic_otp: monotonic_otp@10 {$/;"	l	label:bsec
++monotonic_otp	stm32mp151.dtsi	/^			monotonic_otp: monotonic_otp@10 {$/;"	l	label:bsec
++mpmm_gear0	tc.dts	/^				mpmm_gear0: counter@0 {$/;"	l	label:amu
++mpmm_gear1	tc.dts	/^				mpmm_gear1: counter@1 {$/;"	l	label:amu
++mpmm_gear2	tc.dts	/^				mpmm_gear2: counter@2 {$/;"	l	label:amu
++nand2_otp	stm32mp131.dtsi	/^			nand2_otp: cfg10_otp@28 {$/;"	l	label:bsec
++nand_otp	stm32mp131.dtsi	/^			nand_otp: cfg9_otp@24 {$/;"	l	label:bsec
++nand_otp	stm32mp151.dtsi	/^			nand_otp: nand_otp@24 {$/;"	l	label:bsec
++non_trusted_fw_content_cert	cot_descriptors.dtsi	/^		non_trusted_fw_content_cert: non_trusted_fw_content_cert {$/;"	l
++non_trusted_fw_content_cert	stm32mp1-cot-descriptors.dtsi	/^		non_trusted_fw_content_cert: non_trusted_fw_content_cert {$/;"	l
++non_trusted_fw_key_cert	cot_descriptors.dtsi	/^		non_trusted_fw_key_cert: non_trusted_fw_key_cert {$/;"	l
++non_trusted_fw_key_cert	stm32mp1-cot-descriptors.dtsi	/^		non_trusted_fw_key_cert: non_trusted_fw_key_cert {$/;"	l
++non_trusted_nv_counter	cot_descriptors.dtsi	/^	non_trusted_nv_counter: non_trusted_nv_counter {$/;"	l	label:non_volatile_counters
++non_trusted_nv_counter	stm32mp1-cot-descriptors.dtsi	/^	non_trusted_nv_counter: non_trusted_nv_counter {$/;"	l	label:non_volatile_counters
++non_trusted_world_pk	cot_descriptors.dtsi	/^			non_trusted_world_pk: non_trusted_world_pk {$/;"	l	label:trusted_key_cert
++non_trusted_world_pk	stm32mp1-cot-descriptors.dtsi	/^			non_trusted_world_pk: non_trusted_world_pk {$/;"	l	label:trusted_key_cert
++non_volatile_counters	cot_descriptors.dtsi	/^non_volatile_counters: non_volatile_counters {$/;"	l
++non_volatile_counters	stm32mp1-cot-descriptors.dtsi	/^non_volatile_counters: non_volatile_counters {$/;"	l
++nt_fw_config_hash	cot_descriptors.dtsi	/^			nt_fw_config_hash: nt_fw_config_hash {$/;"	l	label:non_trusted_fw_content_cert
++nt_fw_content_pk	cot_descriptors.dtsi	/^			nt_fw_content_pk: nt_fw_content_pk {$/;"	l	label:non_trusted_fw_key_cert
++nt_fw_content_pk	stm32mp1-cot-descriptors.dtsi	/^			nt_fw_content_pk: nt_fw_content_pk {$/;"	l	label:non_trusted_fw_key_cert
++nt_world_bl_hash	cot_descriptors.dtsi	/^			nt_world_bl_hash: nt_world_bl_hash {$/;"	l	label:non_trusted_fw_content_cert
++nt_world_bl_hash	stm32mp1-cot-descriptors.dtsi	/^			nt_world_bl_hash: nt_world_bl_hash {$/;"	l	label:non_trusted_fw_content_cert
++oscclk0	fvp-ve-Cortex-A5x1.dts	/^		oscclk0: osc@0 {$/;"	l
++oscclk1	fvp-ve-Cortex-A5x1.dts	/^		oscclk1: osc@1 {$/;"	l
++oscclk3	fvp-ve-Cortex-A5x1.dts	/^		oscclk3: osc@3 {$/;"	l
++package_otp	stm32mp151.dtsi	/^			package_otp: package_otp@40 {$/;"	l	label:bsec
++part_number_otp	stm32mp131.dtsi	/^			part_number_otp: part_number_otp@4 {$/;"	l	label:bsec
++part_number_otp	stm32mp151.dtsi	/^			part_number_otp: part_number_otp@4 {$/;"	l	label:bsec
++pcie_ctlr	n1sdp.dtsi	/^		pcie_ctlr: pcie@70000000 {$/;"	l
++pcie_slave_ctlr	n1sdp-multi-chip.dts	/^	pcie_slave_ctlr: pcie@40070000000 {$/;"	l
++pinctrl	stm32mp131.dtsi	/^		pinctrl: pinctrl@50002000 {$/;"	l
++pinctrl	stm32mp151.dtsi	/^		pinctrl: pinctrl@50002000 {$/;"	l
++pinctrl_z	stm32mp151.dtsi	/^		pinctrl_z: pinctrl@54004000 {$/;"	l
++pka	stm32mp13xc.dtsi	/^		pka: pka@54006000 {$/;"	l
++pka	stm32mp13xf.dtsi	/^		pka: pka@54006000 {$/;"	l
++pkh_otp	stm32mp13-ssp-bl2.dtsi	/^			pkh_otp: pkh_otp@60 {$/;"	l
++pkh_otp	stm32mp131.dtsi	/^			pkh_otp: pkh_otp@60 {$/;"	l	label:bsec
++pkh_otp	stm32mp151.dtsi	/^			pkh_otp: pkh_otp@60 {$/;"	l	label:bsec
++pl0	tc.dts	/^		pl0: pipeline@0 {$/;"	l	label:dp0
++pl1	tc.dts	/^		pl1: pipeline@1 {$/;"	l
++pll1	stm32mp135f-dk.dts	/^	pll1:st,pll@0 {$/;"	l
++pll1	stm32mp157a-avenger96.dts	/^	pll1: st,pll@0 {$/;"	l
++pll1	stm32mp157c-odyssey-som.dtsi	/^	pll1: st,pll@0 {$/;"	l
++pll1	stm32mp15xx-osd32.dtsi	/^	pll1: st,pll@0 {$/;"	l
++pll1_cfg1	stm32mp135f-dk.dts	/^		pll1_cfg1: pll1_cfg1 {$/;"	l	label:pll1
++pll1_vco_1300Mhz	stm32mp135f-dk.dts	/^		pll1_vco_1300Mhz: pll1-vco-1300Mhz {$/;"	l
++pll2	stm32mp135f-dk.dts	/^	pll2:st,pll@1 {$/;"	l
++pll2	stm32mp157a-avenger96.dts	/^	pll2: st,pll@1 {$/;"	l
++pll2	stm32mp157c-odyssey-som.dtsi	/^	pll2: st,pll@1 {$/;"	l
++pll2	stm32mp15xx-dkx.dtsi	/^	pll2: st,pll@1 {$/;"	l
++pll2	stm32mp15xx-edx.dtsi	/^	pll2: st,pll@1 {$/;"	l
++pll2	stm32mp15xx-osd32.dtsi	/^	pll2: st,pll@1 {$/;"	l
++pll2_cfg1	stm32mp135f-dk.dts	/^		pll2_cfg1: pll2_cfg1 {$/;"	l	label:pll2
++pll2_vco_1066Mhz	stm32mp135f-dk.dts	/^		pll2_vco_1066Mhz: pll2-vco-1066Mhz {$/;"	l
++pll3	stm32mp135f-dk.dts	/^	pll3:st,pll@2 {$/;"	l
++pll3	stm32mp157a-avenger96.dts	/^	pll3: st,pll@2 {$/;"	l
++pll3	stm32mp157c-odyssey-som.dtsi	/^	pll3: st,pll@2 {$/;"	l
++pll3	stm32mp15xx-dkx.dtsi	/^	pll3: st,pll@2 {$/;"	l
++pll3	stm32mp15xx-edx.dtsi	/^	pll3: st,pll@2 {$/;"	l
++pll3	stm32mp15xx-osd32.dtsi	/^	pll3: st,pll@2 {$/;"	l
++pll3_cfg1	stm32mp135f-dk.dts	/^		pll3_cfg1: pll3_cfg1 {$/;"	l	label:pll3
++pll3_vco_417_8Mhz	stm32mp135f-dk.dts	/^		pll3_vco_417_8Mhz: pll3-vco-417_8Mhz {$/;"	l
++pll4	stm32mp135f-dk.dts	/^	pll4:st,pll@3 {$/;"	l
++pll4	stm32mp157a-avenger96.dts	/^	pll4: st,pll@3 {$/;"	l
++pll4	stm32mp157c-odyssey-som.dtsi	/^	pll4: st,pll@3 {$/;"	l
++pll4	stm32mp15xx-dkx.dtsi	/^	pll4: st,pll@3 {$/;"	l
++pll4	stm32mp15xx-edx.dtsi	/^	pll4: st,pll@3 {$/;"	l
++pll4	stm32mp15xx-osd32.dtsi	/^	pll4: st,pll@3 {$/;"	l
++pll4_cfg1	stm32mp135f-dk.dts	/^		pll4_cfg1: pll4_cfg1 {$/;"	l	label:pll4
++pll4_vco_600Mhz	stm32mp135f-dk.dts	/^		pll4_vco_600Mhz: pll4-vco-600Mhz {$/;"	l
++pmic	stm32mp135f-dk.dts	/^	pmic: stpmic@33 {$/;"	l
++pmic	stm32mp157a-avenger96.dts	/^	pmic: stpmic@33 {$/;"	l
++pmic	stm32mp157c-odyssey-som.dtsi	/^	pmic: stpmic@33 {$/;"	l
++pmic	stm32mp15xx-dkx.dtsi	/^	pmic: stpmic@33 {$/;"	l
++pmic	stm32mp15xx-edx.dtsi	/^	pmic: stpmic@33 {$/;"	l
++pmic	stm32mp15xx-evx.dtsi	/^	pmic: stpmic@33 {$/;"	l
++pmic	stm32mp15xx-osd32.dtsi	/^	pmic: stpmic@33 {$/;"	l
++pmic_watchdog	stm32mp157c-odyssey-som.dtsi	/^		pmic_watchdog: watchdog {$/;"	l
++pmic_watchdog	stm32mp15xx-osd32.dtsi	/^		pmic_watchdog: watchdog {$/;"	l
++pwr_irq	stm32mp151.dtsi	/^		pwr_irq: pwr@50001020 {$/;"	l
++pwr_mcu	stm32mp151.dtsi	/^		pwr_mcu: pwr_mcu@50001014 {$/;"	l
++pwr_regulators	stm32mp131.dtsi	/^		pwr_regulators: pwr@50001000 {$/;"	l
++pwr_regulators	stm32mp151.dtsi	/^		pwr_regulators: pwr@50001000 {$/;"	l
++qspi	stm32mp131.dtsi	/^		qspi: spi@58003000 {$/;"	l
++qspi	stm32mp151.dtsi	/^		qspi: spi@58003000 {$/;"	l
++qspi_bk1_pins_a	stm32mp15-pinctrl.dtsi	/^	qspi_bk1_pins_a: qspi-bk1-0 {$/;"	l
++qspi_bk2_pins_a	stm32mp15-pinctrl.dtsi	/^	qspi_bk2_pins_a: qspi-bk2-0 {$/;"	l
++qspi_clk_pins_a	stm32mp15-pinctrl.dtsi	/^	qspi_clk_pins_a: qspi-clk-0 {$/;"	l
++rcc	stm32mp131.dtsi	/^		rcc: rcc@50000000 {$/;"	l
++rcc	stm32mp151.dtsi	/^		rcc: rcc@50000000 {$/;"	l
++refclk	corstone700.dtsi	/^	refclk: refclk@1a220000 {$/;"	l
++refclk100mhz	corstone700.dtsi	/^	refclk100mhz: refclk100mhz {$/;"	l
++refclk24mhz	a5ds.dts	/^	refclk24mhz: refclk24mhz {$/;"	l
++refclk7500khz	a5ds.dts	/^	refclk7500khz: refclk7500khz {$/;"	l
++reg11	stm32mp131.dtsi	/^			reg11: reg11 {$/;"	l	label:pwr_regulators
++reg11	stm32mp151.dtsi	/^			reg11: reg11 {$/;"	l	label:pwr_regulators
++reg18	stm32mp131.dtsi	/^			reg18: reg18 {$/;"	l	label:pwr_regulators
++reg18	stm32mp151.dtsi	/^			reg18: reg18 {$/;"	l	label:pwr_regulators
++reg_3v3	stm32mp157c-lxa-mc1.dts	/^	reg_3v3: regulator_3v3 {$/;"	l
++rma_otp	stm32mp13-ssp-bl2.dtsi	/^			rma_otp: rma_otp@e0 {$/;"	l
++rma_otp	stm32mp15-ssp-bl2.dtsi	/^			rma_otp: rma_otp@e0 {$/;"	l
++rng	stm32mp131.dtsi	/^		rng: rng@54004000 {$/;"	l
++rng1	stm32mp151.dtsi	/^		rng1: rng@54003000 {$/;"	l
++rtc	stm32mp151.dtsi	/^		rtc: rtc@5c004000 {$/;"	l
++saes	stm32mp13xc.dtsi	/^		saes: saes@54005000 {$/;"	l
++saes	stm32mp13xf.dtsi	/^		saes: saes@54005000 {$/;"	l
++scmi_clk	tc.dts	/^		scmi_clk: protocol@14 {$/;"	l
++scmi_dvfs	morello-fvp.dts	/^			scmi_dvfs: protocol@13 {$/;"	l
++scmi_dvfs	tc.dts	/^		scmi_dvfs: protocol@13 {$/;"	l
++scp_fw_content_cert	cot_descriptors.dtsi	/^		scp_fw_content_cert: scp_fw_content_cert {$/;"	l
++scp_fw_content_pk	cot_descriptors.dtsi	/^			scp_fw_content_pk: scp_fw_content_pk {$/;"	l	label:scp_fw_key_cert
++scp_fw_hash	cot_descriptors.dtsi	/^			scp_fw_hash: scp_fw_hash {$/;"	l	label:scp_fw_content_cert
++scp_fw_key_cert	cot_descriptors.dtsi	/^		scp_fw_key_cert: scp_fw_key_cert {$/;"	l
++sdmmc1	stm32mp131.dtsi	/^		sdmmc1: mmc@58005000 {$/;"	l
++sdmmc1	stm32mp151.dtsi	/^		sdmmc1: mmc@58005000 {$/;"	l
++sdmmc1_b4_pins_a	stm32mp13-pinctrl.dtsi	/^	sdmmc1_b4_pins_a: sdmmc1-b4-0 {$/;"	l
++sdmmc1_b4_pins_a	stm32mp15-pinctrl.dtsi	/^	sdmmc1_b4_pins_a: sdmmc1-b4-0 {$/;"	l
++sdmmc1_clk_pins_a	stm32mp13-pinctrl.dtsi	/^	sdmmc1_clk_pins_a: sdmmc1-clk-0 {$/;"	l
++sdmmc1_dir_pins_a	stm32mp15-pinctrl.dtsi	/^	sdmmc1_dir_pins_a: sdmmc1-dir-0 {$/;"	l
++sdmmc2	stm32mp131.dtsi	/^		sdmmc2: mmc@58007000 {$/;"	l
++sdmmc2	stm32mp151.dtsi	/^		sdmmc2: mmc@58007000 {$/;"	l
++sdmmc2_b4_pins_a	stm32mp13-pinctrl.dtsi	/^	sdmmc2_b4_pins_a: sdmmc2-b4-0 {$/;"	l
++sdmmc2_b4_pins_a	stm32mp15-pinctrl.dtsi	/^	sdmmc2_b4_pins_a: sdmmc2-b4-0 {$/;"	l
++sdmmc2_b4_pins_b	stm32mp15-pinctrl.dtsi	/^	sdmmc2_b4_pins_b: sdmmc2-b4-1 {$/;"	l
++sdmmc2_clk_pins_a	stm32mp13-pinctrl.dtsi	/^	sdmmc2_clk_pins_a: sdmmc2-clk-0 {$/;"	l
++sdmmc2_d47_pins_a	stm32mp15-pinctrl.dtsi	/^	sdmmc2_d47_pins_a: sdmmc2-d47-0 {$/;"	l
++sdmmc2_d47_pins_b	stm32mp15-pinctrl.dtsi	/^	sdmmc2_d47_pins_b: sdmmc2-d47-1 {$/;"	l
++sdmmc2_d47_pins_d	stm32mp15-pinctrl.dtsi	/^	sdmmc2_d47_pins_d: sdmmc2-d47-3 {$/;"	l
++serial0	a5ds.dts	/^	serial0: uart@1a200000 {$/;"	l
++serial0	corstone700.dtsi	/^	serial0: uart@1a510000 {$/;"	l
++serial1	a5ds.dts	/^	serial1: uart@1a210000 {$/;"	l
++serial1	corstone700.dtsi	/^	serial1: uart@1a520000 {$/;"	l
++sip_sp_content_cert	cot_descriptors.dtsi	/^		sip_sp_content_cert: sip_sp_content_cert {$/;"	l
++smbclk	a5ds.dts	/^	smbclk: refclk24mhzx2 {$/;"	l
++smbclk	corstone700.dtsi	/^	smbclk: refclk24mhzx2 {$/;"	l
++smbclk	fvp-ve-Cortex-A5x1.dts	/^		smbclk: osc@5 {$/;"	l
++smbclk	fvp-ve-Cortex-A7x1.dts	/^	smbclk: refclk24mhzx2 {$/;"	l
++smmu_ccix	n1sdp.dtsi	/^		smmu_ccix: iommu@4f000000 {$/;"	l
++smmu_pcie	n1sdp.dtsi	/^		smmu_pcie: iommu@4f400000 {$/;"	l
++smmu_slave_pcie	n1sdp-multi-chip.dts	/^	smmu_slave_pcie: iommu@4004f400000 {$/;"	l
++soc_fw_config_hash	cot_descriptors.dtsi	/^			soc_fw_config_hash: soc_fw_config_hash {$/;"	l	label:soc_fw_content_cert
++soc_fw_content_cert	cot_descriptors.dtsi	/^		soc_fw_content_cert: soc_fw_content_cert {$/;"	l
++soc_fw_content_pk	cot_descriptors.dtsi	/^			soc_fw_content_pk: soc_fw_content_pk {$/;"	l	label:soc_fw_key_cert
++soc_fw_hash	cot_descriptors.dtsi	/^			soc_fw_hash: soc_fw_hash {$/;"	l	label:soc_fw_content_cert
++soc_fw_key_cert	cot_descriptors.dtsi	/^		soc_fw_key_cert: soc_fw_key_cert {$/;"	l
++soc_hdlcdclk	n1sdp-single-chip.dts	/^	soc_hdlcdclk:  hdlcdclk {$/;"	l
++soc_refclk100mhz	morello.dtsi	/^	soc_refclk100mhz: refclk100mhz {$/;"	l
++soc_refclk100mhz	n1sdp.dtsi	/^	soc_refclk100mhz: refclk100mhz {$/;"	l
++soc_refclk100mhz	tc.dts	/^	soc_refclk100mhz: refclk100mhz {$/;"	l
++soc_refclk60mhz	n1sdp-single-chip.dts	/^	soc_refclk60mhz: refclk60mhz {$/;"	l
++soc_refclk60mhz	tc.dts	/^	soc_refclk60mhz: refclk60mhz {$/;"	l
++soc_uart0	morello.dtsi	/^	soc_uart0: uart@2a400000 {$/;"	l
++soc_uart0	n1sdp.dtsi	/^		soc_uart0: serial@2a400000 {$/;"	l
++soc_uart0	tc.dts	/^	soc_uart0: uart@7ff80000 {$/;"	l
++soc_uartclk	morello.dtsi	/^	soc_uartclk:  uartclk {$/;"	l
++soc_uartclk	n1sdp.dtsi	/^	soc_uartclk:  uartclk {$/;"	l
++soc_uartclk	tc.dts	/^	soc_uartclk:  uartclk {$/;"	l
++sp_pkg1_hash	cot_descriptors.dtsi	/^			sp_pkg1_hash: sp_pkg1_hash {$/;"	l	label:sip_sp_content_cert
++sp_pkg2_hash	cot_descriptors.dtsi	/^			sp_pkg2_hash: sp_pkg2_hash {$/;"	l	label:sip_sp_content_cert
++sp_pkg3_hash	cot_descriptors.dtsi	/^			sp_pkg3_hash: sp_pkg3_hash {$/;"	l	label:sip_sp_content_cert
++sp_pkg4_hash	cot_descriptors.dtsi	/^			sp_pkg4_hash: sp_pkg4_hash {$/;"	l	label:sip_sp_content_cert
++sp_pkg5_hash	cot_descriptors.dtsi	/^			sp_pkg5_hash: sp_pkg5_hash {$/;"	l	label:sip_sp_content_cert
++sp_pkg6_hash	cot_descriptors.dtsi	/^			sp_pkg6_hash: sp_pkg6_hash {$/;"	l	label:sip_sp_content_cert
++sp_pkg7_hash	cot_descriptors.dtsi	/^			sp_pkg7_hash: sp_pkg7_hash {$/;"	l	label:sip_sp_content_cert
++sp_pkg8_hash	cot_descriptors.dtsi	/^			sp_pkg8_hash: sp_pkg8_hash {$/;"	l	label:sip_sp_content_cert
++spi6	stm32mp151.dtsi	/^		spi6: spi@5c001000 {$/;"	l
++sram	morello.dtsi	/^	sram: sram@45200000 {$/;"	l
++sram	tc.dts	/^	sram: sram@6000000 {$/;"	l
++ssp_otp	stm32mp13-ssp-bl2.dtsi	/^			ssp_otp: cfg9_otp@24 {$/;"	l
++ssp_otp	stm32mp15-ssp-bl2.dtsi	/^			ssp_otp: ssp_otp@20 {$/;"	l
++stgen	stm32mp151.dtsi	/^		stgen: stgen@5c008000 {$/;"	l
++stm32mp_cfg_cert	stm32mp1-cot-descriptors.dtsi	/^		stm32mp_cfg_cert: stm32mp_cfg_cert {$/;"	l
++syscfg	stm32mp131.dtsi	/^		syscfg: syscon@50020000 {$/;"	l
++syscfg	stm32mp151.dtsi	/^		syscfg: syscon@50020000 {$/;"	l
++sysreg	tc.dts	/^	sysreg: sysreg@1c010000 {$/;"	l
++tamp	stm32mp151.dtsi	/^		tamp: tamp@5c00a000 {$/;"	l
++tb_fw_config_hash	cot_descriptors.dtsi	/^			tb_fw_config_hash: tb_fw_config_hash {$/;"	l	label:trusted_boot_fw_cert
++tb_fw_hash	cot_descriptors.dtsi	/^			tb_fw_hash: tb_fw_hash {$/;"	l	label:trusted_boot_fw_cert
++tda998x_0_input	n1sdp-single-chip.dts	/^				tda998x_0_input: endpoint {$/;"	l
++timer0	a5ds.dts	/^	timer0: timer@1a040000 {$/;"	l
++timers12	stm32mp151.dtsi	/^		timers12: timer@40006000 {$/;"	l
++timers15	stm32mp151.dtsi	/^		timers15: timer@44006000 {$/;"	l
++tos_fw_config_hash	cot_descriptors.dtsi	/^			tos_fw_config_hash: tos_fw_config_hash {$/;"	l	label:trusted_os_fw_content_cert
++tos_fw_config_hash	stm32mp1-cot-descriptors.dtsi	/^			tos_fw_config_hash: tos_fw_config_hash {$/;"	l	label:trusted_os_fw_content_cert
++tos_fw_content_pk	cot_descriptors.dtsi	/^			tos_fw_content_pk: tos_fw_content_pk {$/;"	l	label:trusted_os_fw_key_cert
++tos_fw_content_pk	stm32mp1-cot-descriptors.dtsi	/^			tos_fw_content_pk: tos_fw_content_pk {$/;"	l	label:trusted_os_fw_key_cert
++tos_fw_extra1_hash	cot_descriptors.dtsi	/^			tos_fw_extra1_hash: tos_fw_extra1_hash {$/;"	l	label:trusted_os_fw_content_cert
++tos_fw_extra1_hash	stm32mp1-cot-descriptors.dtsi	/^			tos_fw_extra1_hash: tos_fw_extra1_hash {$/;"	l	label:trusted_os_fw_content_cert
++tos_fw_extra2_hash	cot_descriptors.dtsi	/^			tos_fw_extra2_hash: tos_fw_extra2_hash {$/;"	l	label:trusted_os_fw_content_cert
++tos_fw_extra2_hash	stm32mp1-cot-descriptors.dtsi	/^			tos_fw_extra2_hash: tos_fw_extra2_hash {$/;"	l	label:trusted_os_fw_content_cert
++tos_fw_hash	cot_descriptors.dtsi	/^			tos_fw_hash: tos_fw_hash {$/;"	l	label:trusted_os_fw_content_cert
++tos_fw_hash	stm32mp1-cot-descriptors.dtsi	/^			tos_fw_hash: tos_fw_hash {$/;"	l	label:trusted_os_fw_content_cert
++trusted_boot_fw_cert	cot_descriptors.dtsi	/^		trusted_boot_fw_cert: trusted_boot_fw_cert {$/;"	l
++trusted_key_cert	cot_descriptors.dtsi	/^		trusted_key_cert: trusted_key_cert {$/;"	l
++trusted_key_cert	stm32mp1-cot-descriptors.dtsi	/^		trusted_key_cert: trusted_key_cert {$/;"	l
++trusted_nv_counter	cot_descriptors.dtsi	/^	trusted_nv_counter: trusted_nv_counter {$/;"	l	label:non_volatile_counters
++trusted_nv_counter	stm32mp1-cot-descriptors.dtsi	/^	trusted_nv_counter: trusted_nv_counter {$/;"	l	label:non_volatile_counters
++trusted_os_fw_content_cert	cot_descriptors.dtsi	/^		trusted_os_fw_content_cert: trusted_os_fw_content_cert {$/;"	l
++trusted_os_fw_content_cert	stm32mp1-cot-descriptors.dtsi	/^		trusted_os_fw_content_cert: trusted_os_fw_content_cert {$/;"	l
++trusted_os_fw_key_cert	cot_descriptors.dtsi	/^		trusted_os_fw_key_cert: trusted_os_fw_key_cert {$/;"	l
++trusted_os_fw_key_cert	stm32mp1-cot-descriptors.dtsi	/^		trusted_os_fw_key_cert: trusted_os_fw_key_cert {$/;"	l
++trusted_world_pk	cot_descriptors.dtsi	/^			trusted_world_pk: trusted_world_pk {$/;"	l	label:trusted_key_cert
++trusted_world_pk	stm32mp1-cot-descriptors.dtsi	/^			trusted_world_pk: trusted_world_pk {$/;"	l	label:trusted_key_cert
++ts_cal1	stm32mp131.dtsi	/^			ts_cal1: calib@5c {$/;"	l	label:bsec
++ts_cal1	stm32mp151.dtsi	/^			ts_cal1: calib@5c {$/;"	l	label:bsec
++ts_cal2	stm32mp131.dtsi	/^			ts_cal2: calib@5e {$/;"	l	label:bsec
++ts_cal2	stm32mp151.dtsi	/^			ts_cal2: calib@5e {$/;"	l	label:bsec
++uart4	stm32mp131.dtsi	/^		uart4: serial@40010000 {$/;"	l
++uart4	stm32mp151.dtsi	/^		uart4: serial@40010000 {$/;"	l
++uart4_pins_a	stm32mp13-pinctrl.dtsi	/^	uart4_pins_a: uart4-0 {$/;"	l
++uart4_pins_a	stm32mp15-pinctrl.dtsi	/^	uart4_pins_a: uart4-0 {$/;"	l
++uart4_pins_b	stm32mp15-pinctrl.dtsi	/^	uart4_pins_b: uart4-1 {$/;"	l
++uart5	stm32mp131.dtsi	/^		uart5: serial@40011000 {$/;"	l
++uart5	stm32mp151.dtsi	/^		uart5: serial@40011000 {$/;"	l
++uart7	stm32mp131.dtsi	/^		uart7: serial@40018000 {$/;"	l
++uart7	stm32mp151.dtsi	/^		uart7: serial@40018000 {$/;"	l
++uart7_pins_a	stm32mp15-pinctrl.dtsi	/^	uart7_pins_a: uart7-0 {$/;"	l
++uart7_pins_b	stm32mp15-pinctrl.dtsi	/^	uart7_pins_b: uart7-1 {$/;"	l
++uart7_pins_c	stm32mp15-pinctrl.dtsi	/^	uart7_pins_c: uart7-2 {$/;"	l
++uart8	stm32mp131.dtsi	/^		uart8: serial@40019000 {$/;"	l
++uart8	stm32mp151.dtsi	/^		uart8: serial@40019000 {$/;"	l
++uart8_pins_a	stm32mp13-pinctrl.dtsi	/^	uart8_pins_a: uart8-0 {$/;"	l
++uart8_pins_a	stm32mp15-pinctrl.dtsi	/^	uart8_pins_a: uart8-0 {$/;"	l
++uartclk	arm_fpga.dts	/^	uartclk: baudclock {$/;"	l
++uartclk	corstone700.dtsi	/^	uartclk: uartclk {$/;"	l
++uid_otp	stm32mp131.dtsi	/^			uid_otp: uid_otp@34 {$/;"	l	label:bsec
++uid_otp	stm32mp151.dtsi	/^			uid_otp: uid_otp@34 {$/;"	l	label:bsec
++usart1	stm32mp131.dtsi	/^		usart1: serial@4c000000 {$/;"	l
++usart1	stm32mp151.dtsi	/^		usart1: serial@5c000000 {$/;"	l
++usart1_pins_a	stm32mp13-pinctrl.dtsi	/^	usart1_pins_a: usart1-0 {$/;"	l
++usart2	stm32mp131.dtsi	/^		usart2: serial@4c001000 {$/;"	l
++usart2	stm32mp151.dtsi	/^		usart2: serial@4000e000 {$/;"	l
++usart2_pins_a	stm32mp15-pinctrl.dtsi	/^	usart2_pins_a: usart2-0 {$/;"	l
++usart2_pins_b	stm32mp15-pinctrl.dtsi	/^	usart2_pins_b: usart2-1 {$/;"	l
++usart2_pins_c	stm32mp15-pinctrl.dtsi	/^	usart2_pins_c: usart2-2 {$/;"	l
++usart3	stm32mp131.dtsi	/^		usart3: serial@4000f000 {$/;"	l
++usart3	stm32mp151.dtsi	/^		usart3: serial@4000f000 {$/;"	l
++usart3_pins_a	stm32mp15-pinctrl.dtsi	/^	usart3_pins_a: usart3-0 {$/;"	l
++usart3_pins_b	stm32mp15-pinctrl.dtsi	/^	usart3_pins_b: usart3-1 {$/;"	l
++usart3_pins_c	stm32mp15-pinctrl.dtsi	/^	usart3_pins_c: usart3-2 {$/;"	l
++usart6	stm32mp131.dtsi	/^		usart6: serial@44003000 {$/;"	l
++usart6	stm32mp151.dtsi	/^		usart6: serial@44003000 {$/;"	l
++usb	corstone700_fpga.dts	/^	usb: usb@4020000 {$/;"	l
++usb33	stm32mp131.dtsi	/^			usb33: usb33 {$/;"	l	label:pwr_regulators
++usb33	stm32mp151.dtsi	/^			usb33: usb33 {$/;"	l	label:pwr_regulators
++usbh_ehci	stm32mp131.dtsi	/^		usbh_ehci: usbh-ehci@5800d000 {$/;"	l
++usbh_ohci	stm32mp131.dtsi	/^		usbh_ohci: usbh-ohci@5800c000 {$/;"	l
++usbotg_fs_dp_dm_pins_a	stm32mp15-pinctrl.dtsi	/^	usbotg_fs_dp_dm_pins_a: usbotg-fs-dp-dm-0 {$/;"	l
++usbotg_hs	stm32mp131.dtsi	/^		usbotg_hs: usb-otg@49000000 {$/;"	l
++usbotg_hs	stm32mp151.dtsi	/^		usbotg_hs: usb-otg@49000000 {$/;"	l
++usbotg_hs_pins_a	stm32mp15-pinctrl.dtsi	/^	usbotg_hs_pins_a: usbotg-hs-0 {$/;"	l
++usbphyc	stm32mp131.dtsi	/^		usbphyc: usbphyc@5a006000 {$/;"	l
++usbphyc	stm32mp151.dtsi	/^		usbphyc: usbphyc@5a006000 {$/;"	l
++usbphyc_port0	stm32mp131.dtsi	/^			usbphyc_port0: usb-phy@0 {$/;"	l	label:usbphyc
++usbphyc_port0	stm32mp151.dtsi	/^			usbphyc_port0: usb-phy@0 {$/;"	l	label:usbphyc
++usbphyc_port1	stm32mp131.dtsi	/^			usbphyc_port1: usb-phy@1 {$/;"	l	label:usbphyc
++usbphyc_port1	stm32mp151.dtsi	/^			usbphyc_port1: usb-phy@1 {$/;"	l	label:usbphyc
++v1v2_hdmi	stm32mp157c-odyssey-som.dtsi	/^			v1v2_hdmi: ldo6 {$/;"	l	label:pmic
++v1v2_hdmi	stm32mp15xx-dkx.dtsi	/^			v1v2_hdmi: ldo6 {$/;"	l	label:pmic
++v1v2_hdmi	stm32mp15xx-osd32.dtsi	/^			v1v2_hdmi: ldo6 {$/;"	l	label:pmic
++v1v8	stm32mp157a-avenger96.dts	/^			v1v8: ldo6 {$/;"	l	label:pmic
++v1v8	stm32mp15xx-edx.dtsi	/^			v1v8: ldo6 {$/;"	l	label:pmic
++v1v8	stm32mp15xx-evx.dtsi	/^			v1v8: ldo6 {$/;"	l	label:pmic
++v1v8_audio	stm32mp157c-odyssey-som.dtsi	/^			v1v8_audio: ldo1 {$/;"	l	label:pmic
++v1v8_audio	stm32mp15xx-dkx.dtsi	/^			v1v8_audio: ldo1 {$/;"	l	label:pmic
++v1v8_audio	stm32mp15xx-osd32.dtsi	/^			v1v8_audio: ldo1 {$/;"	l	label:pmic
++v1v8_periph	stm32mp135f-dk.dts	/^			v1v8_periph: ldo6 {$/;"	l	label:pmic
++v2m_clk24mhz	fvp-foundation-motherboard.dtsi	/^		v2m_clk24mhz: clk24mhz {$/;"	l
++v2m_clk24mhz	rtsm_ve-motherboard-aarch32.dtsi	/^		v2m_clk24mhz: clk24mhz {$/;"	l
++v2m_clk24mhz	rtsm_ve-motherboard.dtsi	/^		v2m_clk24mhz: clk24mhz {$/;"	l
++v2m_fixed_3v3	a5ds.dts	/^	v2m_fixed_3v3: fixed-regulator-0 {$/;"	l
++v2m_fixed_3v3	fvp-foundation-motherboard.dtsi	/^		v2m_fixed_3v3: fixedregulator@0 {$/;"	l
++v2m_fixed_3v3	rtsm_ve-motherboard-aarch32.dtsi	/^		v2m_fixed_3v3: fixedregulator@0 {$/;"	l
++v2m_fixed_3v3	rtsm_ve-motherboard.dtsi	/^		v2m_fixed_3v3: fixedregulator {$/;"	l
++v2m_oscclk1	rtsm_ve-motherboard-aarch32.dtsi	/^			v2m_oscclk1: osc@1 {$/;"	l
++v2m_oscclk1	rtsm_ve-motherboard.dtsi	/^			v2m_oscclk1: osc {$/;"	l
++v2m_refclk1mhz	fvp-foundation-motherboard.dtsi	/^		v2m_refclk1mhz: refclk1mhz {$/;"	l
++v2m_refclk1mhz	rtsm_ve-motherboard-aarch32.dtsi	/^		v2m_refclk1mhz: refclk1mhz {$/;"	l
++v2m_refclk1mhz	rtsm_ve-motherboard.dtsi	/^		v2m_refclk1mhz: refclk1mhz {$/;"	l
++v2m_refclk32khz	fvp-foundation-motherboard.dtsi	/^		v2m_refclk32khz: refclk32khz {$/;"	l
++v2m_refclk32khz	rtsm_ve-motherboard-aarch32.dtsi	/^		v2m_refclk32khz: refclk32khz {$/;"	l
++v2m_refclk32khz	rtsm_ve-motherboard.dtsi	/^		v2m_refclk32khz: refclk32khz {$/;"	l
++v2m_serial0	fvp-foundation-motherboard.dtsi	/^			v2m_serial0: uart@90000 {$/;"	l
++v2m_serial0	rtsm_ve-motherboard-aarch32.dtsi	/^			v2m_serial0: uart@90000 {$/;"	l
++v2m_serial0	rtsm_ve-motherboard.dtsi	/^			v2m_serial0: uart@90000 {$/;"	l
++v2m_serial1	fvp-foundation-motherboard.dtsi	/^			v2m_serial1: uart@a0000 {$/;"	l
++v2m_serial1	rtsm_ve-motherboard-aarch32.dtsi	/^			v2m_serial1: uart@a0000 {$/;"	l
++v2m_serial1	rtsm_ve-motherboard.dtsi	/^			v2m_serial1: uart@a0000 {$/;"	l
++v2m_serial2	fvp-foundation-motherboard.dtsi	/^			v2m_serial2: uart@b0000 {$/;"	l
++v2m_serial2	rtsm_ve-motherboard-aarch32.dtsi	/^			v2m_serial2: uart@b0000 {$/;"	l
++v2m_serial2	rtsm_ve-motherboard.dtsi	/^			v2m_serial2: uart@b0000 {$/;"	l
++v2m_serial3	fvp-foundation-motherboard.dtsi	/^			v2m_serial3: uart@c0000 {$/;"	l
++v2m_serial3	rtsm_ve-motherboard-aarch32.dtsi	/^			v2m_serial3: uart@c0000 {$/;"	l
++v2m_serial3	rtsm_ve-motherboard.dtsi	/^			v2m_serial3: uart@c0000 {$/;"	l
++v2m_sysctl	fvp-foundation-motherboard.dtsi	/^			v2m_sysctl: sysctl@20000 {$/;"	l
++v2m_sysctl	rtsm_ve-motherboard-aarch32.dtsi	/^			v2m_sysctl: sysctl@20000 {$/;"	l
++v2m_sysctl	rtsm_ve-motherboard.dtsi	/^			v2m_sysctl: sysctl@20000 {$/;"	l
++v2m_sysreg	fvp-foundation-motherboard.dtsi	/^			v2m_sysreg: sysreg@10000 {$/;"	l
++v2m_sysreg	rtsm_ve-motherboard-aarch32.dtsi	/^			v2m_sysreg: sysreg@10000 {$/;"	l
++v2m_sysreg	rtsm_ve-motherboard.dtsi	/^			v2m_sysreg: sysreg@10000 {$/;"	l
++v2m_timer01	fvp-foundation-motherboard.dtsi	/^			v2m_timer01: timer@110000 {$/;"	l
++v2m_timer01	rtsm_ve-motherboard-aarch32.dtsi	/^			v2m_timer01: timer@110000 {$/;"	l
++v2m_timer01	rtsm_ve-motherboard.dtsi	/^			v2m_timer01: timer@110000 {$/;"	l
++v2m_timer23	fvp-foundation-motherboard.dtsi	/^			v2m_timer23: timer@120000 {$/;"	l
++v2m_timer23	rtsm_ve-motherboard-aarch32.dtsi	/^			v2m_timer23: timer@120000 {$/;"	l
++v2m_timer23	rtsm_ve-motherboard.dtsi	/^			v2m_timer23: timer@120000 {$/;"	l
++v2v8	stm32mp157a-avenger96.dts	/^			v2v8: ldo2 {$/;"	l	label:pmic
++v2v8	stm32mp15xx-edx.dtsi	/^			v2v8: ldo2 {$/;"	l	label:pmic
++v3v3	stm32mp157a-avenger96.dts	/^			v3v3: buck4 {$/;"	l	label:pmic
++v3v3	stm32mp157c-odyssey-som.dtsi	/^			v3v3: buck4 {$/;"	l	label:pmic
++v3v3	stm32mp15xx-dkx.dtsi	/^			v3v3: buck4 {$/;"	l	label:pmic
++v3v3	stm32mp15xx-edx.dtsi	/^			v3v3: buck4 {$/;"	l	label:pmic
++v3v3	stm32mp15xx-osd32.dtsi	/^			v3v3: buck4 {$/;"	l	label:pmic
++v3v3_ao	stm32mp135f-dk.dts	/^	v3v3_ao: v3v3_ao {$/;"	l
++v3v3_hdmi	stm32mp157c-odyssey-som.dtsi	/^			v3v3_hdmi: ldo2 {$/;"	l	label:pmic
++v3v3_hdmi	stm32mp15xx-dkx.dtsi	/^			v3v3_hdmi: ldo2 {$/;"	l	label:pmic
++v3v3_hdmi	stm32mp15xx-osd32.dtsi	/^			v3v3_hdmi: ldo2 {$/;"	l	label:pmic
++v3v3_sw	stm32mp135f-dk.dts	/^			v3v3_sw: pwr_sw2 {$/;"	l	label:pmic
++vbus_otg	stm32mp157a-avenger96.dts	/^			vbus_otg: pwr_sw1 {$/;"	l	label:pmic
++vbus_otg	stm32mp157c-odyssey-som.dtsi	/^			vbus_otg: pwr_sw1 {$/;"	l	label:pmic
++vbus_otg	stm32mp15xx-dkx.dtsi	/^			vbus_otg: pwr_sw1 {$/;"	l	label:pmic
++vbus_otg	stm32mp15xx-edx.dtsi	/^			vbus_otg: pwr_sw1 {$/;"	l	label:pmic
++vbus_otg	stm32mp15xx-osd32.dtsi	/^			vbus_otg: pwr_sw1 {$/;"	l	label:pmic
++vbus_sw	stm32mp157a-avenger96.dts	/^			vbus_sw: pwr_sw2 {$/;"	l	label:pmic
++vbus_sw	stm32mp157c-odyssey-som.dtsi	/^			vbus_sw: pwr_sw2 {$/;"	l	label:pmic
++vbus_sw	stm32mp15xx-dkx.dtsi	/^			vbus_sw: pwr_sw2 {$/;"	l	label:pmic
++vbus_sw	stm32mp15xx-edx.dtsi	/^			vbus_sw: pwr_sw2 {$/;"	l	label:pmic
++vbus_sw	stm32mp15xx-osd32.dtsi	/^			vbus_sw: pwr_sw2 {$/;"	l	label:pmic
++vdd	stm32mp135f-dk.dts	/^			vdd: buck3 {$/;"	l	label:pmic
++vdd	stm32mp157a-avenger96.dts	/^			vdd: buck3 {$/;"	l	label:pmic
++vdd	stm32mp157c-odyssey-som.dtsi	/^			vdd: buck3 {$/;"	l	label:pmic
++vdd	stm32mp15xx-dkx.dtsi	/^			vdd: buck3 {$/;"	l	label:pmic
++vdd	stm32mp15xx-edx.dtsi	/^			vdd: buck3 {$/;"	l	label:pmic
++vdd	stm32mp15xx-osd32.dtsi	/^			vdd: buck3 {$/;"	l	label:pmic
++vdd_adc	stm32mp135f-dk.dts	/^			vdd_adc: ldo1 {$/;"	l	label:pmic
++vdd_ddr	stm32mp135f-dk.dts	/^			vdd_ddr: buck2 {$/;"	l	label:pmic
++vdd_ddr	stm32mp157a-avenger96.dts	/^			vdd_ddr: buck2 {$/;"	l	label:pmic
++vdd_ddr	stm32mp157c-odyssey-som.dtsi	/^			vdd_ddr: buck2 {$/;"	l	label:pmic
++vdd_ddr	stm32mp15xx-dkx.dtsi	/^			vdd_ddr: buck2 {$/;"	l	label:pmic
++vdd_ddr	stm32mp15xx-edx.dtsi	/^			vdd_ddr: buck2 {$/;"	l	label:pmic
++vdd_ddr	stm32mp15xx-osd32.dtsi	/^			vdd_ddr: buck2 {$/;"	l	label:pmic
++vdd_sd	stm32mp135f-dk.dts	/^			vdd_sd: ldo5 {$/;"	l	label:pmic
++vdd_sd	stm32mp157a-avenger96.dts	/^			vdd_sd: ldo5 {$/;"	l	label:pmic
++vdd_sd	stm32mp15xx-edx.dtsi	/^			vdd_sd: ldo5 {$/;"	l	label:pmic
++vdd_usb	stm32mp135f-dk.dts	/^			vdd_usb: ldo4 {$/;"	l	label:pmic
++vdd_usb	stm32mp157a-avenger96.dts	/^			vdd_usb: ldo4 {$/;"	l	label:pmic
++vdd_usb	stm32mp157c-odyssey-som.dtsi	/^			vdd_usb: ldo4 {$/;"	l	label:pmic
++vdd_usb	stm32mp15xx-dkx.dtsi	/^			vdd_usb: ldo4 {$/;"	l	label:pmic
++vdd_usb	stm32mp15xx-edx.dtsi	/^			vdd_usb: ldo4 {$/;"	l	label:pmic
++vdd_usb	stm32mp15xx-osd32.dtsi	/^			vdd_usb: ldo4 {$/;"	l	label:pmic
++vdda	stm32mp157a-avenger96.dts	/^			vdda: ldo1 {$/;"	l	label:pmic
++vdda	stm32mp157c-odyssey-som.dtsi	/^			vdda: ldo5 {$/;"	l	label:pmic
++vdda	stm32mp15xx-dkx.dtsi	/^			vdda: ldo5 {$/;"	l	label:pmic
++vdda	stm32mp15xx-edx.dtsi	/^			vdda: ldo1 {$/;"	l	label:pmic
++vdda	stm32mp15xx-osd32.dtsi	/^			vdda: ldo5 {$/;"	l	label:pmic
++vddcore	stm32mp135f-dk.dts	/^			vddcore: buck4 {$/;"	l	label:pmic
++vddcore	stm32mp157a-avenger96.dts	/^			vddcore: buck1 {$/;"	l	label:pmic
++vddcore	stm32mp157c-odyssey-som.dtsi	/^			vddcore: buck1 {$/;"	l	label:pmic
++vddcore	stm32mp15xx-dkx.dtsi	/^			vddcore: buck1 {$/;"	l	label:pmic
++vddcore	stm32mp15xx-edx.dtsi	/^			vddcore: buck1 {$/;"	l	label:pmic
++vddcore	stm32mp15xx-osd32.dtsi	/^			vddcore: buck1 {$/;"	l	label:pmic
++vddcpu	stm32mp135f-dk.dts	/^			vddcpu: buck1 {$/;"	l	label:pmic
++vencoder_in	tc.dts	/^			vencoder_in: endpoint {$/;"	l
++vin	stm32mp135f-dk.dts	/^	vin: vin {$/;"	l
++vin	stm32mp157c-odyssey-som.dtsi	/^	vin: vin {$/;"	l
++vin	stm32mp15xx-dkx.dtsi	/^	vin: vin {$/;"	l
++vin	stm32mp15xx-edx.dtsi	/^	vin: vin {$/;"	l
++vref_ddr	stm32mp135f-dk.dts	/^			vref_ddr: vref_ddr {$/;"	l	label:pmic
++vref_ddr	stm32mp157a-avenger96.dts	/^			vref_ddr: vref_ddr {$/;"	l	label:pmic
++vref_ddr	stm32mp157c-odyssey-som.dtsi	/^			vref_ddr: vref_ddr {$/;"	l	label:pmic
++vref_ddr	stm32mp15xx-dkx.dtsi	/^			vref_ddr: vref_ddr {$/;"	l	label:pmic
++vref_ddr	stm32mp15xx-edx.dtsi	/^			vref_ddr: vref_ddr {$/;"	l	label:pmic
++vref_ddr	stm32mp15xx-osd32.dtsi	/^			vref_ddr: vref_ddr {$/;"	l	label:pmic
++vtt_ddr	stm32mp157a-avenger96.dts	/^			vtt_ddr: ldo3 {$/;"	l	label:pmic
++vtt_ddr	stm32mp157c-odyssey-som.dtsi	/^			vtt_ddr: ldo3 {$/;"	l	label:pmic
++vtt_ddr	stm32mp15xx-dkx.dtsi	/^			vtt_ddr: ldo3 {$/;"	l	label:pmic
++vtt_ddr	stm32mp15xx-edx.dtsi	/^			vtt_ddr: ldo3 {$/;"	l	label:pmic
++vtt_ddr	stm32mp15xx-osd32.dtsi	/^			vtt_ddr: ldo3 {$/;"	l	label:pmic
+diff --git a/fdts/stm32mp15-pinctrl.dtsi b/fdts/stm32mp15-pinctrl.dtsi
+index d74dc2b09..8ba25bda1 100644
+--- a/fdts/stm32mp15-pinctrl.dtsi
++++ b/fdts/stm32mp15-pinctrl.dtsi
+@@ -161,8 +161,8 @@
+ 	sdmmc2_d47_pins_a: sdmmc2-d47-0 {
+ 		pins {
+ 			pinmux = <STM32_PINMUX('A', 8, AF9)>, /* SDMMC2_D4 */
+-				 <STM32_PINMUX('A', 9, AF10)>, /* SDMMC2_D5 */
+-				 <STM32_PINMUX('E', 5, AF9)>, /* SDMMC2_D6 */
++				 <STM32_PINMUX('A', 15, AF9)>, /* SDMMC2_D5 */
++				 <STM32_PINMUX('C', 6, AF10)>, /* SDMMC2_D6 */
+ 				 <STM32_PINMUX('D', 3, AF9)>; /* SDMMC2_D7 */
+ 			slew-rate = <1>;
+ 			drive-push-pull;
+@@ -271,6 +271,19 @@
+ 		};
+ 	};
+ 
++	usart1_pins_a: usart1-0 {
++		pins1 {
++			pinmux = <STM32_PINMUX('Z', 7, AF7)>; /* USART1_TX */
++			bias-disable;
++			drive-push-pull;
++			slew-rate = <0>;
++		};
++		pins2 {
++			pinmux = <STM32_PINMUX('Z', 6, AF7)>; /* USART1_RX */
++			bias-disable;
++		};
++	};
++
+ 	usart2_pins_a: usart2-0 {
+ 		pins1 {
+ 			pinmux = <STM32_PINMUX('F', 5, AF7)>, /* USART2_TX */
+diff --git a/fdts/stm32mp157f-dn-som.dts b/fdts/stm32mp157f-dn-som.dts
+index fce8e886b..d13865032 100644
+--- a/fdts/stm32mp157f-dn-som.dts
++++ b/fdts/stm32mp157f-dn-som.dts
+@@ -17,7 +17,7 @@
+ 	};
+ 
+ 	aliases {
+-		serial0 = &uart4;
++		serial0 = &uart4; /*serial0 = &uart4;*/
+ 		serial1 = &usart3;
+ 	};
+ };
+diff --git a/fdts/stm32mp157f-ev1-fw-config.dts b/fdts/stm32mp157f-ev1-fw-config.dts
+index 2abbe50e6..70a277f36 100644
+--- a/fdts/stm32mp157f-ev1-fw-config.dts
++++ b/fdts/stm32mp157f-ev1-fw-config.dts
+@@ -3,5 +3,5 @@
+  * Copyright (c) 2020-2021, STMicroelectronics - All Rights Reserved
+  */
+ 
+-#define DDR_SIZE	0x40000000 /* 1GB */
++#define DDR_SIZE	0x20000000 /*0x40000000  1GB */
+ #include "stm32mp15-fw-config.dtsi"
+diff --git a/fdts/stm32mp15xx-dkx.dtsi b/fdts/stm32mp15xx-dkx.dtsi
+index c878f6368..f9ea74bcb 100644
+--- a/fdts/stm32mp15xx-dkx.dtsi
++++ b/fdts/stm32mp15xx-dkx.dtsi
+@@ -311,6 +311,12 @@
+ 	st,csi-cal-input = <8>;
+ };
+ 
++&usart1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&usart1_pins_a>;
++	status = "disabled";
++};
++
+ &uart4 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&uart4_pins_a>;
+diff --git a/fdts/stm32mp15xx-edx.dtsi b/fdts/stm32mp15xx-edx.dtsi
+index f906ed63a..abda6e847 100644
+--- a/fdts/stm32mp15xx-edx.dtsi
++++ b/fdts/stm32mp15xx-edx.dtsi
+@@ -6,12 +6,13 @@
+ 
+ #include <dt-bindings/clock/stm32mp1-clksrc.h>
+ #include <dt-bindings/power/stm32mp1-power.h>
+-#include "stm32mp15-ddr3-2x4Gb-1066-binG.dtsi"
++/*	#include "stm32mp15-ddr3-2x4Gb-1066-binG.dtsi" */
++#include "stm32mp15-ddr3-1x4Gb-1066-binG.dtsi"
+ 
+ / {
+ 	memory@c0000000 {
+ 		device_type = "memory";
+-		reg = <0xC0000000 0x40000000>;
++		reg = <0xc0000000 0x20000000>;  /*reg = <0xC0000000 0x40000000>;*/
+ 	};
+ 
+ 	aliases {
+@@ -299,17 +300,11 @@
+ 
+ &sdmmc1 {
+ 	pinctrl-names = "default";
+-	pinctrl-0 = <&sdmmc1_b4_pins_a &sdmmc1_dir_pins_a>;
++	pinctrl-0 = <&sdmmc1_b4_pins_a>;
+ 	disable-wp;
+-	st,sig-dir;
+ 	st,neg-edge;
+-	st,use-ckin;
+ 	bus-width = <4>;
+-	vmmc-supply = <&vdd_sd>;
+-	sd-uhs-sdr12;
+-	sd-uhs-sdr25;
+-	sd-uhs-sdr50;
+-	sd-uhs-ddr50;
++	vmmc-supply = <&v3v3>;
+ 	status = "okay";
+ };
+ 
+@@ -333,6 +328,12 @@
+ 	st,csi-cal-input = <8>;
+ };
+ 
++&usart1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&usart1_pins_a>;
++	status = "okay";
++};
++
+ &uart4 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&uart4_pins_a>;
+@@ -340,7 +341,7 @@
+ };
+ 
+ &usbotg_hs {
+-	vbus-supply = <&vbus_otg>;
++	vbus-supply = <&vbus_otg>; 
+ };
+ 
+ &usbphyc_port0 {
+diff --git a/fdts/stm32mp15xx-evx.dtsi b/fdts/stm32mp15xx-evx.dtsi
+index 8362b8d89..880ab9240 100644
+--- a/fdts/stm32mp15xx-evx.dtsi
++++ b/fdts/stm32mp15xx-evx.dtsi
+@@ -7,10 +7,10 @@
+ &fmc {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&fmc_pins_a>;
+-	status = "okay";
++	status = "disabled";
+ 
+ 	nand-controller@4,0 {
+-		status = "okay";
++		status = "disabled";
+ 
+ 		nand@0 {
+ 			reg = <0>;
+@@ -37,7 +37,7 @@
+ 	reg = <0x58003000 0x1000>, <0x70000000 0x4000000>;
+ 	#address-cells = <1>;
+ 	#size-cells = <0>;
+-	status = "okay";
++	status = "disabled";
+ 
+ 	flash0: mx66l51235l@0 {
+ 		compatible = "jedec,spi-nor";
+@@ -53,6 +53,7 @@
+ 	status = "disabled";
+ };
+ 
++
+ &usart3 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&usart3_pins_b>;
+-- 
+2.34.1
+

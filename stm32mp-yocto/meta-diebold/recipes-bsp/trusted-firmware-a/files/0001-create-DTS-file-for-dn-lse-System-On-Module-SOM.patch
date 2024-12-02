@@ -1,0 +1,49 @@
+From 994338ff67be5fe136870ed76a5c1366695a3699 Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mateuspantoja9@gmail.com>
+Date: Tue, 3 Jan 2023 22:09:44 -0500
+Subject: [PATCH 1/8] create DTS file for dn-lse System On Module (SOM)
+
+---
+ .vscode/settings.json       |  4 ++++
+ fdts/stm32mp157f-dn-som.dts | 16 ++++++++++++++++
+ 2 files changed, 20 insertions(+)
+ create mode 100644 .vscode/settings.json
+ create mode 100644 fdts/stm32mp157f-dn-som.dts
+
+diff --git a/.vscode/settings.json b/.vscode/settings.json
+new file mode 100644
+index 000000000..7f660c31f
+--- /dev/null
++++ b/.vscode/settings.json
+@@ -0,0 +1,4 @@
++{
++    "nrf-connect.topdir": "/home/pantoja/ncs",
++    "nrf-connect.toolchain.path": "PATH"
++}
+\ No newline at end of file
+diff --git a/fdts/stm32mp157f-dn-som.dts b/fdts/stm32mp157f-dn-som.dts
+new file mode 100644
+index 000000000..6395579ec
+--- /dev/null
++++ b/fdts/stm32mp157f-dn-som.dts
+@@ -0,0 +1,16 @@
++#include "stm32mp157f-ed1.dts"
++#include "stm32mp15xx-evx.dtsi"
++
++/ {
++	model = "System On Module DN-LSE 2023";
++	compatible = "st,stm32mp157";
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++	};
++
++	aliases {
++		serial0 = &uart4;
++		serial1 = &usart3;
++	};
++};
+\ No newline at end of file
+-- 
+2.34.1
+

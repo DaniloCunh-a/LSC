@@ -1,0 +1,29 @@
+From 8a667aa86d61c816fd6aade34cd00ec1e44d36b2 Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mateuspantoja9@gmail.com>
+Date: Mon, 16 Jan 2023 22:22:01 -0500
+Subject: [PATCH 02/17] =?UTF-8?q?Script=20De=20Automa=C3=A7ao=20de=20Build?=
+ =?UTF-8?q?=20UBoot?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ build.sh | 6 ++++++
+ 1 file changed, 6 insertions(+)
+ create mode 100755 build.sh
+
+diff --git a/build.sh b/build.sh
+new file mode 100755
+index 0000000000..3dea669890
+--- /dev/null
++++ b/build.sh
+@@ -0,0 +1,6 @@
++#! /bin/sh
++
++export KBUILD_OUTPUT=../build/stm32mp157f_dn_som
++export DEVICE_TREE=stm32mp157f-dn-som
++make stm32mp157f_dn_som_defconfig
++make all
+-- 
+2.34.1
+

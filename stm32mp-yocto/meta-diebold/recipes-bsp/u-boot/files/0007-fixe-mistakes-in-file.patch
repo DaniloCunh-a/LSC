@@ -1,0 +1,29 @@
+From 566e5ed10354b522f55de90e1955344b6796af84 Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mateuspantoja9@gmail.com>
+Date: Thu, 2 Feb 2023 23:30:23 -0500
+Subject: [PATCH 07/17] fixe mistakes in file
+
+---
+ arch/arm/mach-stm32mp/Kconfig.15x | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm/mach-stm32mp/Kconfig.15x b/arch/arm/mach-stm32mp/Kconfig.15x
+index 312b5c687d..335570d11d 100644
+--- a/arch/arm/mach-stm32mp/Kconfig.15x
++++ b/arch/arm/mach-stm32mp/Kconfig.15x
+@@ -77,6 +77,12 @@ config TARGET_ICORE_STM32MP1
+ 
+ config TARGET_DN_LSE_STM32MP157F_DN_SOM
+ 	bool "DN-LSE STM32MP157F SOM"
++	imply BOOTSTAGE
++	imply CMD_BOOTSTAGE
++	imply CMD_CLS if CMD_BMP
++	imply DISABLE_CONSOLE
++	imply PRE_CONSOLE_BUFFER
++	imply SILENT_CONSOLE
+ 	help
+ 	 Config to System On Module Desinged by LSE to Diebold
+ 	 managed by board/dn-lse/stm32mp157f-dn-som
+-- 
+2.34.1
+

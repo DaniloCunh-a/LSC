@@ -1,0 +1,839 @@
+From 9640a229e7afff236c0ffa658cec56e992fbff8f Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mateuspantoja9@gmail.com>
+Date: Thu, 2 Feb 2023 23:33:12 -0500
+Subject: [PATCH 09/17] fixes to bug that not start the board when the kernel
+ was loaded.
+
+---
+ board/dn-lse/stm32mp157f-dn-som/Makefile      |   8 +-
+ .../stm32mp157f-dn-som/stm32mp157f-dn-som.c   | 716 +-----------------
+ configs/stm32mp157f_dn_som_defconfig          |   6 +-
+ 3 files changed, 9 insertions(+), 721 deletions(-)
+
+diff --git a/board/dn-lse/stm32mp157f-dn-som/Makefile b/board/dn-lse/stm32mp157f-dn-som/Makefile
+index b32452e1ae..91e01ac64e 100644
+--- a/board/dn-lse/stm32mp157f-dn-som/Makefile
++++ b/board/dn-lse/stm32mp157f-dn-som/Makefile
+@@ -5,7 +5,7 @@
+ 
+ 
+ obj-y += stm32mp157f-dn-som.o
+-ifeq ($(CONFIG_ARCH_STM32MP),y)
+-obj-$(CONFIG_SYS_MTDPARTS_RUNTIME) += ../../st/common/stm32mp_mtdparts.o
+-obj-$(CONFIG_SET_DFU_ALT_INFO) += ../../st/common/stm32mp_dfu.o
+-endif
++# ifeq ($(CONFIG_ARCH_STM32MP),y)
++# obj-$(CONFIG_SYS_MTDPARTS_RUNTIME) += ../../st/common/stm32mp_mtdparts.o
++# obj-$(CONFIG_SET_DFU_ALT_INFO) += ../../st/common/stm32mp_dfu.o
++# endif
+diff --git a/board/dn-lse/stm32mp157f-dn-som/stm32mp157f-dn-som.c b/board/dn-lse/stm32mp157f-dn-som/stm32mp157f-dn-som.c
+index 51c81cfb76..c6c8055859 100644
+--- a/board/dn-lse/stm32mp157f-dn-som/stm32mp157f-dn-som.c
++++ b/board/dn-lse/stm32mp157f-dn-som/stm32mp157f-dn-som.c
+@@ -96,10 +96,7 @@ int board_early_init_f(void)
+ 
+ int checkboard(void)
+ {
+-	int ret;
+ 	char *mode;
+-	u32 otp;
+-	struct udevice *dev;
+ 	const char *fdt_compat;
+ 	int fdt_compat_len;
+ 
+@@ -118,22 +115,6 @@ int checkboard(void)
+ 	log_info("Board: stm32mp1 in %s mode (%s)\n", mode,
+ 		 fdt_compat && fdt_compat_len ? fdt_compat : "");
+ 
+-	/* display the STMicroelectronics board identification */
+-	if (CONFIG_IS_ENABLED(CMD_STBOARD)) {
+-		ret = uclass_get_device_by_driver(UCLASS_MISC,
+-						  DM_DRIVER_GET(stm32mp_bsec),
+-						  &dev);
+-		if (!ret)
+-			ret = misc_read(dev, STM32_BSEC_SHADOW(BSEC_OTP_BOARD),
+-					&otp, sizeof(otp));
+-		if (ret > 0 && otp)
+-			log_info("Board: MB%04x Var%d.%d Rev.%c-%02d\n",
+-				 otp >> 16,
+-				 (otp >> 12) & 0xF,
+-				 (otp >> 4) & 0xF,
+-				 ((otp >> 8) & 0xF) - 1 + 'A',
+-				 otp & 0xF);
+-	}
+ 
+ 	return 0;
+ }
+@@ -315,157 +296,6 @@ static void __maybe_unused led_error_blink(u32 nb_blink)
+ 		hang();
+ }
+ 
+-static int adc_measurement(ofnode node, int adc_count, int *min_uV, int *max_uV)
+-{
+-	struct ofnode_phandle_args adc_args;
+-	struct udevice *adc;
+-	unsigned int raw;
+-	int ret, uV;
+-	int i;
+-
+-	for (i = 0; i < adc_count; i++) {
+-		if (ofnode_parse_phandle_with_args(node, "st,adc_usb_pd",
+-						   "#io-channel-cells", 0, i,
+-						   &adc_args)) {
+-			log_debug("can't find /config/st,adc_usb_pd\n");
+-			return 0;
+-		}
+-
+-		ret = uclass_get_device_by_ofnode(UCLASS_ADC, adc_args.node,
+-						  &adc);
+-
+-		if (ret) {
+-			log_err("Can't get adc device(%d)\n", ret);
+-			return ret;
+-		}
+-
+-		ret = adc_channel_single_shot(adc->name, adc_args.args[0],
+-					      &raw);
+-		if (ret) {
+-			log_err("single shot failed for %s[%d]!\n",
+-				adc->name, adc_args.args[0]);
+-			return ret;
+-		}
+-		/* Convert to uV */
+-		if (!adc_raw_to_uV(adc, raw, &uV)) {
+-			if (uV > *max_uV)
+-				*max_uV = uV;
+-			if (uV < *min_uV)
+-				*min_uV = uV;
+-			log_debug("%s[%02d] = %u, %d uV\n",
+-				  adc->name, adc_args.args[0], raw, uV);
+-		} else {
+-			log_err("Can't get uV value for %s[%d]\n",
+-				adc->name, adc_args.args[0]);
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+-static int board_check_usb_power(void)
+-{
+-	ofnode node;
+-	int max_uV = 0;
+-	int min_uV = USB_START_HIGH_THRESHOLD_UV;
+-	int adc_count, ret;
+-	u32 nb_blink;
+-	u8 i;
+-
+-	node = ofnode_path("/config");
+-	if (!ofnode_valid(node)) {
+-		log_debug("no /config node?\n");
+-		return -ENOENT;
+-	}
+-
+-	/*
+-	 * Retrieve the ADC channels devices and get measurement
+-	 * for each of them
+-	 */
+-	adc_count = ofnode_count_phandle_with_args(node, "st,adc_usb_pd",
+-						   "#io-channel-cells", 0);
+-	if (adc_count < 0) {
+-		if (adc_count == -ENOENT)
+-			return 0;
+-
+-		log_err("Can't find adc channel (%d)\n", adc_count);
+-
+-		return adc_count;
+-	}
+-
+-	/* perform maximum of 2 ADC measurements to detect power supply current */
+-	for (i = 0; i < 2; i++) {
+-		ret = adc_measurement(node, adc_count, &min_uV, &max_uV);
+-		if (ret)
+-			return ret;
+-
+-		/*
+-		 * If highest value is inside 1.23 Volts and 2.10 Volts, that means
+-		 * board is plugged on an USB-C 3A power supply and boot process can
+-		 * continue.
+-		 */
+-		if (max_uV > USB_START_LOW_THRESHOLD_UV &&
+-		    max_uV <= USB_START_HIGH_THRESHOLD_UV &&
+-		    min_uV <= USB_LOW_THRESHOLD_UV)
+-			return 0;
+-
+-		if (i == 0) {
+-			log_err("Previous ADC measurements was not the one expected, retry in 20ms\n");
+-			mdelay(20);  /* equal to max tPDDebounce duration (min 10ms - max 20ms) */
+-		}
+-	}
+-
+-	log_notice("****************************************************\n");
+-	/*
+-	 * If highest and lowest value are either both below
+-	 * USB_LOW_THRESHOLD_UV or both above USB_LOW_THRESHOLD_UV, that
+-	 * means USB TYPE-C is in unattached mode, this is an issue, make
+-	 * u-boot,error-led blinking and stop boot process.
+-	 */
+-	if ((max_uV > USB_LOW_THRESHOLD_UV &&
+-	     min_uV > USB_LOW_THRESHOLD_UV) ||
+-	     (max_uV <= USB_LOW_THRESHOLD_UV &&
+-	     min_uV <= USB_LOW_THRESHOLD_UV)) {
+-		log_notice("* ERROR USB TYPE-C connection in unattached mode   *\n");
+-		log_notice("* Check that USB TYPE-C cable is correctly plugged *\n");
+-		/* with 125ms interval, led will blink for 17.02 years ....*/
+-		nb_blink = U32_MAX;
+-	}
+-
+-	if (max_uV > USB_LOW_THRESHOLD_UV &&
+-	    max_uV <= USB_WARNING_LOW_THRESHOLD_UV &&
+-	    min_uV <= USB_LOW_THRESHOLD_UV) {
+-		log_notice("*        WARNING 500mA power supply detected       *\n");
+-		nb_blink = 2;
+-	}
+-
+-	if (max_uV > USB_WARNING_LOW_THRESHOLD_UV &&
+-	    max_uV <= USB_START_LOW_THRESHOLD_UV &&
+-	    min_uV <= USB_LOW_THRESHOLD_UV) {
+-		log_notice("*       WARNING 1.5A power supply detected        *\n");
+-		nb_blink = 3;
+-	}
+-
+-	/*
+-	 * If highest value is above 2.15 Volts that means that the USB TypeC
+-	 * supplies more than 3 Amp, this is not compliant with TypeC specification
+-	 */
+-	if (max_uV > USB_START_HIGH_THRESHOLD_UV) {
+-		log_notice("*      USB TYPE-C charger not compliant with       *\n");
+-		log_notice("*                   specification                  *\n");
+-		log_notice("****************************************************\n\n");
+-		/* with 125ms interval, led will blink for 17.02 years ....*/
+-		nb_blink = U32_MAX;
+-	} else {
+-		log_notice("*     Current too low, use a 3A power supply!      *\n");
+-		log_notice("****************************************************\n\n");
+-	}
+-
+-	led_error_blink(nb_blink);
+-
+-	return 0;
+-}
+-
+ static void sysconf_init(void)
+ {
+ 	u8 *syscfg;
+@@ -561,296 +391,6 @@ static void sysconf_init(void)
+ 	clrbits_le32(syscfg + SYSCFG_CMPCR, SYSCFG_CMPCR_SW_CTRL);
+ }
+ 
+-static int board_stm32mp15x_dk2_init(void)
+-{
+-	ofnode node;
+-	struct gpio_desc hdmi, audio;
+-	int ret = 0;
+-
+-	/* Fix to make I2C1 usable on DK2 for touchscreen usage in kernel */
+-	node = ofnode_path("/soc/i2c@40012000/hdmi-transmitter@39");
+-	if (!ofnode_valid(node)) {
+-		log_debug("no hdmi-transmitter@39 ?\n");
+-		return -ENOENT;
+-	}
+-
+-	if (gpio_request_by_name_nodev(node, "reset-gpios", 0,
+-				       &hdmi, GPIOD_IS_OUT)) {
+-		log_debug("could not find reset-gpios\n");
+-		return -ENOENT;
+-	}
+-
+-	node = ofnode_path("/soc/i2c@40012000/cs42l51@4a");
+-	if (!ofnode_valid(node)) {
+-		log_debug("no cs42l51@4a ?\n");
+-		return -ENOENT;
+-	}
+-
+-	if (gpio_request_by_name_nodev(node, "reset-gpios", 0,
+-				       &audio, GPIOD_IS_OUT)) {
+-		log_debug("could not find reset-gpios\n");
+-		return -ENOENT;
+-	}
+-
+-	/* before power up, insure that HDMI and AUDIO IC is under reset */
+-	ret = dm_gpio_set_value(&hdmi, 1);
+-	if (ret) {
+-		log_err("can't set_value for hdmi_nrst gpio");
+-		goto error;
+-	}
+-	ret = dm_gpio_set_value(&audio, 1);
+-	if (ret) {
+-		log_err("can't set_value for audio_nrst gpio");
+-		goto error;
+-	}
+-
+-	/* power-up audio IC */
+-	regulator_autoset_by_name("v1v8_audio", NULL);
+-
+-	/* power-up HDMI IC */
+-	regulator_autoset_by_name("v1v2_hdmi", NULL);
+-	regulator_autoset_by_name("v3v3_hdmi", NULL);
+-
+-error:
+-	return ret;
+-}
+-
+-static bool board_is_stm32mp13x_dk(void)
+-{
+-	if (CONFIG_IS_ENABLED(TARGET_ST_STM32MP13x) &&
+-	     of_machine_is_compatible("st,stm32mp135f-dk"))
+-		return true;
+-
+-	return false;
+-}
+-
+-static bool board_is_stm32mp15x_dk2(void)
+-{
+-	if (CONFIG_IS_ENABLED(TARGET_ST_STM32MP15x) &&
+-	    (of_machine_is_compatible("st,stm32mp157c-dk2") ||
+-	     of_machine_is_compatible("st,stm32mp157f-dk2")))
+-		return true;
+-
+-	return false;
+-}
+-
+-static bool board_is_stm32mp157f_dn_som(void)
+-{
+-	if (CONFIG_IS_ENABLED(TARGET_DN_LSE_STM32MP157F_DN_SOM) &&
+-	     of_machine_is_compatible("lse,stm32mp157f-dn-som"))
+-		return true;
+-
+-	return false;
+-}
+-
+-static bool board_is_stm32mp15x_ev1(void)
+-{
+-	if (CONFIG_IS_ENABLED(TARGET_ST_STM32MP15x) &&
+-	    (of_machine_is_compatible("st,stm32mp157a-ev1") ||
+-	     of_machine_is_compatible("st,stm32mp157c-ev1") ||
+-	     of_machine_is_compatible("st,stm32mp157d-ev1") ||
+-	     of_machine_is_compatible("st,stm32mp157f-ev1")))
+-		return true;
+-
+-	return false;
+-}
+-
+-/* touchscreen driver: used for focaltech touchscreen detection */
+-static const struct udevice_id edt_ft6236_ids[] = {
+-	{ .compatible = "focaltech,ft6236", },
+-	{ }
+-};
+-
+-U_BOOT_DRIVER(edt_ft6236) = {
+-	.name		= "edt_ft6236",
+-	.id		= UCLASS_I2C_GENERIC,
+-	.of_match	= edt_ft6236_ids,
+-};
+-
+-/* touchscreen driver: only used for pincontrol configuration */
+-static const struct udevice_id goodix_ids[] = {
+-	{ .compatible = "goodix,gt911", },
+-	{ .compatible = "goodix,gt9147", },
+-	{ }
+-};
+-
+-U_BOOT_DRIVER(goodix) = {
+-	.name		= "goodix",
+-	.id		= UCLASS_I2C_GENERIC,
+-	.of_match	= goodix_ids,
+-};
+-
+-static int goodix_i2c_read(struct udevice *dev, u16 reg, u8 *buf, int len)
+-{
+-	struct i2c_msg msgs[2];
+-	__be16 wbuf = cpu_to_be16(reg);
+-	int ret;
+-
+-	msgs[0].flags = 0;
+-	msgs[0].addr  = 0x5d;
+-	msgs[0].len   = 2;
+-	msgs[0].buf   = (u8 *)&wbuf;
+-
+-	msgs[1].flags = I2C_M_RD;
+-	msgs[1].addr  = 0x5d;
+-	msgs[1].len   = len;
+-	msgs[1].buf   = buf;
+-
+-	ret = dm_i2c_xfer(dev, msgs, 2);
+-
+-	return ret;
+-}
+-
+-/* HELPER: search detected driver */
+-struct detect_info_t {
+-	bool (*detect)(void);
+-	struct driver *drv;
+-};
+-
+-static struct driver *detect_device(struct detect_info_t *info, u8 size)
+-{
+-	struct driver *drv = NULL;
+-	u8 i;
+-
+-	for (i = 0; i < size && !drv; i++)
+-		if (info[i].detect())
+-			drv = info[i].drv;
+-
+-	return drv;
+-}
+-
+-/* HELPER: force new driver binding, replace the existing one */
+-static void bind_driver(struct driver *drv, const char *path)
+-{
+-	ofnode node;
+-	struct udevice *dev;
+-	struct udevice *parent;
+-	int ret;
+-
+-	node = ofnode_path(path);
+-	if (!ofnode_valid(node))
+-		return;
+-	if (!ofnode_is_enabled(node))
+-		return;
+-
+-	ret = device_find_global_by_ofnode(ofnode_get_parent(node), &parent);
+-	if (!parent || ret) {
+-		log_debug("Unable to found parent. err:%d\n", ret);
+-		return;
+-	}
+-
+-	ret = device_find_global_by_ofnode(node, &dev);
+-	/* remove the driver previously binded */
+-	if (dev && !ret) {
+-		if (dev->driver == drv) {
+-			log_debug("nothing to do, %s already binded.\n", drv->name);
+-			return;
+-		}
+-		log_debug("%s unbind\n", dev->driver->name);
+-		device_remove(dev, DM_REMOVE_NORMAL);
+-		device_unbind(dev);
+-	}
+-	/* bind the new driver */
+-	ret = device_bind_with_driver_data(parent, drv, ofnode_get_name(node),
+-					   0, node, &dev);
+-	if (ret)
+-		log_debug("Unable to bind %s, err:%d\n", drv->name, ret);
+-}
+-
+-bool stm32mp15x_ev1_rm68200(void)
+-{
+-	struct udevice *dev;
+-	struct udevice *bus;
+-	struct dm_i2c_chip *chip;
+-	char id[GOODIX_ID_LEN];
+-	int ret;
+-
+-	ret = uclass_get_device_by_driver(UCLASS_I2C_GENERIC, DM_DRIVER_GET(goodix), &dev);
+-	if (ret)
+-		return false;
+-
+-	bus = dev_get_parent(dev);
+-	chip = dev_get_parent_plat(dev);
+-	ret = dm_i2c_probe(bus, chip->chip_addr, 0, &dev);
+-	if (ret)
+-		return false;
+-
+-	ret = goodix_i2c_read(dev, GOODIX_REG_ID, id, sizeof(id));
+-	if (ret)
+-		return false;
+-
+-	if (!strncmp(id, "9147", sizeof(id)))
+-		return true;
+-
+-	return false;
+-}
+-
+-bool stm32mp15x_ev1_hx8394(void)
+-{
+-	return true;
+-}
+-
+-extern U_BOOT_DRIVER(rm68200_panel);
+-extern U_BOOT_DRIVER(hx8394_panel);
+-
+-struct detect_info_t stm32mp15x_ev1_panels[] = {
+-	CONFIG_IS_ENABLED(VIDEO_LCD_RAYDIUM_RM68200,
+-			  ({ .detect = stm32mp15x_ev1_rm68200,
+-			   .drv = DM_DRIVER_REF(rm68200_panel)
+-			   },
+-			   ))
+-	CONFIG_IS_ENABLED(VIDEO_LCD_ROCKTECH_HX8394,
+-			  ({ .detect = stm32mp15x_ev1_hx8394,
+-			   .drv = DM_DRIVER_REF(hx8394_panel)
+-			   },
+-			   ))
+-};
+-
+-static void board_stm32mp15x_ev1_init(void)
+-{
+-	struct udevice *dev;
+-	struct driver *drv;
+-	struct gpio_desc reset_gpio;
+-	char path[40];
+-
+-	/* configure IRQ line on EV1 for touchscreen before LCD reset */
+-	uclass_get_device_by_driver(UCLASS_I2C_GENERIC, DM_DRIVER_GET(goodix), &dev);
+-
+-	/* get & set reset gpio for panel */
+-	uclass_get_device_by_driver(UCLASS_PANEL, DM_DRIVER_GET(rm68200_panel), &dev);
+-
+-	gpio_request_by_name(dev, "reset-gpios", 0, &reset_gpio, GPIOD_IS_OUT);
+-
+-	if (!dm_gpio_is_valid(&reset_gpio))
+-		return;
+-
+-	dm_gpio_set_value(&reset_gpio, true);
+-	mdelay(1);
+-	dm_gpio_set_value(&reset_gpio, false);
+-	mdelay(10);
+-
+-	/* auto detection of connected panel-dsi */
+-	drv = detect_device(stm32mp15x_ev1_panels, ARRAY_SIZE(stm32mp15x_ev1_panels));
+-	if (!drv)
+-		return;
+-	/* save the detected compatible in environment */
+-	env_set("panel-dsi", drv->of_match->compatible);
+-
+-	dm_gpio_free(NULL, &reset_gpio);
+-
+-	/* select the driver for the detected PANEL */
+-	ofnode_get_path(dev_ofnode(dev), path, sizeof(path));
+-	bind_driver(drv, path);
+-}
+-
+-static void board_stm32mp13x_dk_init(void)
+-{
+-	struct udevice *dev;
+-
+-	/* configure IRQ line on DK for touchscreen before LCD reset */
+-	uclass_get_device_by_driver(UCLASS_NOP, DM_DRIVER_GET(goodix), &dev);
+-}
+-
+ /* board dependent setup after realloc */
+ int board_init(void)
+ {
+@@ -884,69 +424,6 @@ int board_init(void)
+ 
+ int board_late_init(void)
+ {
+-	const void *fdt_compat;
+-	int fdt_compat_len;
+-	int ret;
+-	u32 otp;
+-	struct udevice *dev;
+-	char buf[10];
+-	char dtb_name[256];
+-	int buf_len;
+-
+-	if (board_is_stm32mp13x_dk())
+-		board_stm32mp13x_dk_init();
+-
+-	if (board_is_stm32mp15x_ev1())
+-		board_stm32mp15x_ev1_init();
+-
+-	if (board_is_stm32mp15x_dk2())
+-		board_stm32mp15x_dk2_init();
+-		
+-	if (board_is_stm32mp157f_dn_som())
+-		board_stm32mp15x_dk2_init();
+-
+-	if (IS_ENABLED(CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG)) {
+-		fdt_compat = fdt_getprop(gd->fdt_blob, 0, "compatible",
+-					 &fdt_compat_len);
+-		if (fdt_compat && fdt_compat_len) {
+-			if (strncmp(fdt_compat, "lse,", 4) != 0) {
+-				env_set("board_name", fdt_compat);
+-			} else {
+-				env_set("board_name", fdt_compat + 4);
+-
+-				buf_len = sizeof(dtb_name);
+-				strncpy(dtb_name, fdt_compat + 4, buf_len);
+-				buf_len -= strlen(fdt_compat + 4);
+-				strncat(dtb_name, ".dtb", buf_len);
+-				env_set("fdtfile", dtb_name);
+-			}
+-		}
+-		ret = uclass_get_device_by_driver(UCLASS_MISC,
+-						  DM_DRIVER_GET(stm32mp_bsec),
+-						  &dev);
+-
+-		if (!ret)
+-			ret = misc_read(dev, STM32_BSEC_SHADOW(BSEC_OTP_BOARD),
+-					&otp, sizeof(otp));
+-		if (ret > 0 && otp) {
+-			snprintf(buf, sizeof(buf), "0x%04x", otp >> 16);
+-			env_set("board_id", buf);
+-
+-			snprintf(buf, sizeof(buf), "0x%04x",
+-				 ((otp >> 8) & 0xF) - 1 + 0xA);
+-			env_set("board_rev", buf);
+-		}
+-	}
+-
+-	if (IS_ENABLED(CONFIG_ADC)) {
+-		/* probe all ADC for calibration */
+-		uclass_foreach_dev_probe(UCLASS_ADC, dev) {
+-			log_debug("ACD probe for calibration: %s\n", dev->name);
+-		}
+-		/* for DK1/DK2 boards */
+-		//board_check_usb_power();
+-	}
+-
+ 	return 0;
+ }
+ 
+@@ -1264,183 +741,6 @@ void stm32mp15_fdt_update_optee_nodes(void *new_blob)
+ 	stm32mp15_fdt_update_scmi_node(new_blob);
+ }
+ 
+-/* Galaxycore GC2145 sensor detection */
+-static const struct udevice_id galaxycore_gc2145_ids[] = {
+-	{ .compatible = "galaxycore,gc2145", },
+-	{ }
+-};
+-
+-U_BOOT_DRIVER(galaxycore_gc2145) = {
+-	.name		= "galaxycore_gc2145",
+-	.id		= UCLASS_I2C_GENERIC,
+-	.of_match	= galaxycore_gc2145_ids,
+-};
+-
+-#define GC2145_ID_REG_OFF	0xF0
+-#define GC2145_ID	0x2145
+-static bool stm32mp13x_is_gc2145_detected(void)
+-{
+-	struct udevice *dev, *bus, *supply;
+-	struct dm_i2c_chip *chip;
+-	struct gpio_desc gpio;
+-	bool gpio_found = false;
+-	bool gc2145_detected = false;
+-	u16 id;
+-	int ret;
+-
+-	/* Check if the GC2145 sensor is found */
+-	ret = uclass_get_device_by_driver(UCLASS_I2C_GENERIC, DM_DRIVER_GET(galaxycore_gc2145),
+-					  &dev);
+-	if (ret)
+-		return false;
+-
+-	/*
+-	 * In order to get access to the sensor we need to enable regulators
+-	 * and disable powerdown GPIO
+-	 */
+-	ret = device_get_supply_regulator(dev, "IOVDD-supply", &supply);
+-	if (!ret && supply)
+-		regulator_autoset(supply);
+-
+-	/* Request the powerdown GPIO */
+-	ret = gpio_request_by_name(dev, "powerdown-gpios", 0, &gpio, GPIOD_IS_OUT);
+-	if (!ret) {
+-		gpio_found = true;
+-		dm_gpio_set_value(&gpio, 0);
+-	}
+-
+-	/* Wait a bit so that the device become visible on I2C */
+-	mdelay(10);
+-
+-	bus = dev_get_parent(dev);
+-
+-	/* Probe the i2c device */
+-	chip = dev_get_parent_plat(dev);
+-	ret = dm_i2c_probe(bus, chip->chip_addr, 0, &dev);
+-	if (ret)
+-		goto out;
+-
+-	/* Read the value at 0xF0 - 0xF1 */
+-	ret = dm_i2c_read(dev, GC2145_ID_REG_OFF, (uint8_t *)&id, sizeof(id));
+-	if (ret)
+-		goto out;
+-
+-	/* Check ID values - if GC2145 then nothing to do */
+-	gc2145_detected = (be16_to_cpu(id) == GC2145_ID);
+-
+-out:
+-	if (gpio_found) {
+-		dm_gpio_set_value(&gpio, 1);
+-		dm_gpio_free(NULL, &gpio);
+-	}
+-
+-	return gc2145_detected;
+-}
+-
+-void stm32mp13x_dk_fdt_update(void *new_blob)
+-{
+-	int nodeoff_gc2145 = 0, nodeoff_ov5640 = 0;
+-	int nodeoff_ov5640_ep = 0, nodeoff_stmipi_ep = 0;
+-	int phandle_ov5640_ep, phandle_stmipi_ep;
+-
+-	if (stm32mp13x_is_gc2145_detected())
+-		return;
+-
+-	/*
+-	 * By default the DT is written with GC2145 enabled.  If it isn't
+-	 * detected, disable it within the DT and instead enable the OV5640
+-	 */
+-	nodeoff_gc2145 = fdt_path_offset(new_blob, "/soc/i2c@4c006000/gc2145@3c");
+-	if (nodeoff_gc2145 < 0) {
+-		log_err("gc2145@3c node not found - DT update aborted\n");
+-		return;
+-	}
+-	fdt_setprop_string(new_blob, nodeoff_gc2145, "status", "disabled");
+-
+-	nodeoff_ov5640 = fdt_path_offset(new_blob, "/soc/i2c@4c006000/camera@3c");
+-	if (nodeoff_ov5640 < 0) {
+-		log_err("camera@3c node not found - DT update aborted\n");
+-		return;
+-	}
+-	fdt_setprop_string(new_blob, nodeoff_ov5640, "status", "okay");
+-
+-	nodeoff_ov5640_ep = fdt_path_offset(new_blob, "/soc/i2c@4c006000/camera@3c/port/endpoint");
+-	if (nodeoff_ov5640_ep < 0) {
+-		log_err("camera@3c/port/endpoint node not found - DT update aborted\n");
+-		return;
+-	}
+-
+-	phandle_ov5640_ep = fdt_get_phandle(new_blob, nodeoff_ov5640_ep);
+-
+-	nodeoff_stmipi_ep =
+-		fdt_path_offset(new_blob, "/soc/i2c@4c006000/stmipi@14/ports/port@0/endpoint");
+-	if (nodeoff_stmipi_ep < 0) {
+-		log_err("stmipi@14/ports/port@0/endpoint node not found - DT update aborted\n");
+-		return;
+-	}
+-
+-	fdt_setprop_u32(new_blob, nodeoff_stmipi_ep, "remote-endpoint", phandle_ov5640_ep);
+-
+-	/*
+-	 * The OV5640 endpoint doesn't have remote-endpoint property in order to avoid
+-	 * a device-tree warning due to non birectionnal graph connection.
+-	 * When enabling the OV5640, add the remote-endpoint property as well, pointing
+-	 * to the stmipi endpoint
+-	 */
+-	phandle_stmipi_ep = fdt_get_phandle(new_blob, nodeoff_stmipi_ep);
+-	fdt_setprop_u32(new_blob, nodeoff_ov5640_ep, "remote-endpoint", phandle_stmipi_ep);
+-}
+-
+-void stm32mp15x_dk2_fdt_update(void *new_blob)
+-{
+-	struct udevice *dev;
+-	struct udevice *bus;
+-	int nodeoff = 0;
+-	int ret;
+-
+-	ret = uclass_get_device_by_driver(UCLASS_I2C_GENERIC, DM_DRIVER_GET(edt_ft6236), &dev);
+-	if (ret)
+-		return;
+-
+-	bus = dev_get_parent(dev);
+-
+-	ret = dm_i2c_probe(bus, 0x38, 0, &dev);
+-	if (ret < 0) {
+-		nodeoff = fdt_path_offset(new_blob, "/soc/i2c@40012000/touchscreen@38");
+-		if (nodeoff < 0) {
+-			log_warning("touchscreen@2a node not found\n");
+-		} else {
+-			fdt_set_name(new_blob, nodeoff, "touchscreen@2a");
+-			fdt_setprop_u32(new_blob, nodeoff, "reg", 0x2a);
+-			log_debug("touchscreen@38 node updated to @2a\n");
+-		}
+-	}
+-}
+-
+-void fdt_update_panel_dsi(void *new_blob)
+-{
+-	char const *panel = env_get("panel-dsi");
+-	int nodeoff = 0;
+-
+-	if (!panel)
+-		return;
+-
+-	if (!strcmp(panel, "rocktech,hx8394")) {
+-		nodeoff = fdt_node_offset_by_compatible(new_blob, -1, "raydium,rm68200");
+-		if (nodeoff < 0) {
+-			log_warning("panel-dsi node not found");
+-			return;
+-		}
+-		fdt_setprop_string(new_blob, nodeoff, "compatible", panel);
+-
+-		nodeoff = fdt_node_offset_by_compatible(new_blob, -1, "goodix,gt9147");
+-		if (nodeoff < 0) {
+-			log_warning("touchscreen node not found");
+-			return;
+-		}
+-		fdt_setprop_string(new_blob, nodeoff, "compatible", "goodix,gt911");
+-	}
+-}
+ 
+ int ft_board_setup(void *blob, struct bd_info *bd)
+ {
+@@ -1462,21 +762,9 @@ int ft_board_setup(void *blob, struct bd_info *bd)
+ 	if (CONFIG_IS_ENABLED(FDT_SIMPLEFB))
+ 		fdt_simplefb_enable_and_mem_rsv(blob);
+ 
+-	if (CONFIG_IS_ENABLED(TARGET_ST_STM32MP15x))
++	if (CONFIG_IS_ENABLED(TARGET_DN_LSE_STM32MP157F_DN_SOM))
+ 		stm32mp15_fdt_update_optee_nodes(blob);
+ 
+-	if (board_is_stm32mp13x_dk())
+-		stm32mp13x_dk_fdt_update(blob);
+-
+-	if (board_is_stm32mp15x_dk2())
+-		stm32mp15x_dk2_fdt_update(blob);
+-
+-	if (board_is_stm32mp157f_dn_som())
+-		stm32mp15x_dk2_fdt_update(blob);
+-
+-	if (board_is_stm32mp15x_ev1())
+-		fdt_update_panel_dsi(blob);
+-
+ 	return 0;
+ }
+ #endif
+@@ -1500,4 +788,4 @@ static void board_copro_image_process(ulong fw_image, size_t fw_size)
+ 		rproc_start(id);
+ }
+ 
+-U_BOOT_FIT_LOADABLE_HANDLER(IH_TYPE_COPRO, board_copro_image_process);
++U_BOOT_FIT_LOADABLE_HANDLER(IH_TYPE_COPRO, board_copro_image_process);
+\ No newline at end of file
+diff --git a/configs/stm32mp157f_dn_som_defconfig b/configs/stm32mp157f_dn_som_defconfig
+index cc5f4ee564..1a6e902c77 100644
+--- a/configs/stm32mp157f_dn_som_defconfig
++++ b/configs/stm32mp157f_dn_som_defconfig
+@@ -18,7 +18,7 @@ CONFIG_FIT=y
+ CONFIG_BOOTDELAY=1
+ CONFIG_BOOTCOMMAND="run bootcmd_stm32mp"
+ CONFIG_FDT_SIMPLEFB=y
+-CONFIG_SYS_PROMPT="STM32MP> "
++CONFIG_SYS_PROMPT="DN_LSE> "
+ CONFIG_CMD_ADTIMG=y
+ CONFIG_CMD_ERASEENV=y
+ CONFIG_CMD_NVEDIT_EFI=y
+@@ -61,7 +61,7 @@ CONFIG_SYS_RELOC_GD_ENV_ADDR=y
+ CONFIG_SYS_MMC_ENV_DEV=-1
+ CONFIG_STM32_ADC=y
+ CONFIG_CLK_SCMI=y
+-CONFIG_SET_DFU_ALT_INFO=y
++# CONFIG_SET_DFU_ALT_INFO=y
+ CONFIG_USB_FUNCTION_FASTBOOT=y
+ CONFIG_FASTBOOT_BUF_ADDR=0xC0000000
+ CONFIG_FASTBOOT_BUF_SIZE=0x02000000
+@@ -88,7 +88,7 @@ CONFIG_SUPPORT_EMMC_BOOT=y
+ CONFIG_STM32_SDMMC2=y
+ CONFIG_MTD=y
+ CONFIG_DM_MTD=y
+-CONFIG_SYS_MTDPARTS_RUNTIME=y
++# CONFIG_SYS_MTDPARTS_RUNTIME=y
+ CONFIG_MTD_RAW_NAND=y
+ CONFIG_NAND_STM32_FMC2=y
+ CONFIG_MTD_SPI_NAND=y
+-- 
+2.34.1
+

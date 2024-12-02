@@ -1,0 +1,89 @@
+From 3becdd498fc12d115fed6fa4a0a98458fbdd640c Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mateuspantoja9@gmail.com>
+Date: Tue, 28 Feb 2023 16:25:41 -0500
+Subject: [PATCH 14/17] =?UTF-8?q?Cria=C3=A7=C3=A3o=20do=20board.h=20para?=
+ =?UTF-8?q?=20gerenciamanto=20das=20nossas=20variaveis=20de=20ambientes?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ board/dn-lse/stm32mp157f-dn-som/Kconfig |  2 +-
+ include/configs/stm32mp157f_dn_som.h    | 53 +++++++++++++++++++++++++
+ 2 files changed, 54 insertions(+), 1 deletion(-)
+ create mode 100644 include/configs/stm32mp157f_dn_som.h
+
+diff --git a/board/dn-lse/stm32mp157f-dn-som/Kconfig b/board/dn-lse/stm32mp157f-dn-som/Kconfig
+index 1064c69c41..85e8fd5866 100644
+--- a/board/dn-lse/stm32mp157f-dn-som/Kconfig
++++ b/board/dn-lse/stm32mp157f-dn-som/Kconfig
+@@ -7,6 +7,6 @@ config SYS_VENDOR
+ 	default "dn-lse"
+ 
+ config SYS_CONFIG_NAME
+-	default "stm32mp15_common"
++	default "stm32mp157f_dn_som"
+ 	
+ endif
+diff --git a/include/configs/stm32mp157f_dn_som.h b/include/configs/stm32mp157f_dn_som.h
+new file mode 100644
+index 0000000000..8569c369e5
+--- /dev/null
++++ b/include/configs/stm32mp157f_dn_som.h
+@@ -0,0 +1,53 @@
++/* SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause */
++/*
++ * Copyright (C) 2021, STMicroelectronics - All Rights Reserved
++ *
++ * Configuration settings for the STMicroelectonics STM32MP15x boards
++ */
++
++#ifndef __CONFIG_STM32MP157F_DN_SOM_H__
++#define __CONFIG_STM32MP157F_DN_SOM_H__
++
++#define STM32MP_BOARD_EXTRA_ENV \
++	"usb_pgood_delay=1000\0" \
++	"console=ttySTM0\0" \
++	"developer=MateusPantoja\0"
++
++#include <configs/stm32mp15_common.h>
++
++
++#ifdef CONFIG_EXTRA_ENV_SETTINGS
++/*
++ * default bootcmd for stm32mp1 STMicroelectronics boards:
++ * for serial/usb: execute the stm32prog command
++ * for mmc boot (eMMC, SD card), distro boot on the same mmc device
++ * for nand or spi-nand boot, distro boot with ubifs on UBI partition
++ * for nor boot, distro boot on SD card = mmc0 ONLY !
++ */
++#define ST_STM32MP1_BOOTCMD "bootcmd_stm32mp=" \
++	"echo \"Boot over ${boot_device}${boot_instance}!\";" \
++	"if test ${boot_device} = serial || test ${boot_device} = usb;" \
++	"then stm32prog ${boot_device} ${boot_instance}; " \
++	"else " \
++		"run env_check;" \
++		"if test ${boot_device} = mmc;" \
++		"then env set boot_targets \"mmc${boot_instance}\"; fi;" \
++		"if test ${boot_device} = nand ||" \
++		  " test ${boot_device} = spi-nand ;" \
++		"then env set boot_targets ubifs0; fi;" \
++		"if test ${boot_device} = nor;" \
++		"then env set boot_targets mmc0; fi;" \
++		"run distro_bootcmd;" \
++	"fi;\0"
++
++#undef CONFIG_EXTRA_ENV_SETTINGS
++#define CONFIG_EXTRA_ENV_SETTINGS \
++	STM32MP_MEM_LAYOUT \
++	ST_STM32MP1_BOOTCMD \
++	STM32MP_PARTS_DEFAULT \
++	BOOTENV \
++	STM32MP_EXTRA \
++	STM32MP_BOARD_EXTRA_ENV 
++
++#endif
++#endif
+-- 
+2.34.1
+

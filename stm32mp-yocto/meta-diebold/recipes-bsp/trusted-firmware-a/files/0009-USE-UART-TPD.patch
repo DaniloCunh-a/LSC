@@ -1,0 +1,139 @@
+From 9ef8e375986f00a7299072eef11a38f3ee6a403a Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mspantoja@hub-uea.org>
+Date: Thu, 22 Feb 2024 21:47:10 -0400
+Subject: [PATCH] USE UART TPD
+
+---
+ build-emmc.sh               |  7 ++++---
+ build-sd.sh                 |  6 +++---
+ build-usb.sh                |  6 +++---
+ fdts/stm32mp15-pinctrl.dtsi | 26 ++++++++++++++------------
+ fdts/stm32mp157f-dn-som.dts |  4 ++--
+ 5 files changed, 26 insertions(+), 23 deletions(-)
+
+diff --git a/build-emmc.sh b/build-emmc.sh
+index 861b9311d..1787c6079 100755
+--- a/build-emmc.sh
++++ b/build-emmc.sh
+@@ -10,7 +10,7 @@ unset CFLAGS;
+ rm -r ../build/stm32mp1/release/
+ 
+ #Compilar Binarios para o dual core stm32mp157f
+-# make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_USB_PROGRAMMER=1 STM32MP15=1 
++# make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_USB_PROGRAMMER=1 STM32MP15=1
+ # make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb AARCH32_SP=sp_min bl32 dtbs
+ 
+ 
+@@ -21,5 +21,6 @@ make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 AARCH32_SP=
+     BL33_CFG=../build/stm32mp1/uboot/u-boot.dtb bl32 dtbs fip
+ 
+ 
+-cp ../build/stm32mp1/release/tf-a-stm32mp157f-dn-som.stm32 ../../som/yocto/dbd-tpd/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp157f-ev1-emmc.stm32
+-cp ../build/stm32mp1/release/fip.bin  ../../som/yocto/dbd-tpd/tmp/deploy/images/stm32mp1/fip/fip-stm32mp157f-ev1-trusted.bin
++cp ../build/stm32mp1/release/tf-a-stm32mp157f-dn-som.stm32 ../../som/yocto/build-test/tmp/deploy/images/stm32mp15-dn-som/arm-trusted-firmware/tf-a-stm32mp157f-dn-som-emmc.stm32
++cp ../build/stm32mp1/release/fip.bin  ../../som/yocto/build-test/tmp/deploy/images/stm32mp15-dn-som/fip/fip-stm32mp157f-dn-som-trusted.bin
++
+diff --git a/build-sd.sh b/build-sd.sh
+index f016c7c5a..271572eb0 100755
+--- a/build-sd.sh
++++ b/build-sd.sh
+@@ -10,7 +10,7 @@ unset CFLAGS;
+ rm -r ../build/stm32mp1/release/
+ 
+ #Compilar Binarios para o dual core stm32mp157f
+-# make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_USB_PROGRAMMER=1 STM32MP15=1 
++# make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_USB_PROGRAMMER=1 STM32MP15=1
+ # make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb AARCH32_SP=sp_min bl32 dtbs
+ 
+ 
+@@ -21,5 +21,5 @@ make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 AARCH32_SP=
+     BL33_CFG=../build/stm32mp1/uboot/u-boot.dtb bl32 dtbs fip
+ 
+ 
+-cp ../build/stm32mp1/release/tf-a-stm32mp157f-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp157f-ev1-sdcard.stm32
+-cp ../build/stm32mp1/release/fip.bin  ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/fip/fip-stm32mp157f-ev1-trusted.bin
+\ No newline at end of file
++cp ../build/stm32mp1/release/tf-a-stm32mp157f-dn-som.stm32 ../../som/yocto/build-test/tmp/deploy/images/stm32mp15-dn-som/arm-trusted-firmware/tf-a-stm32mp157f-dn-som-sdcard.stm32
++cp ../build/stm32mp1/release/fip.bin  ../../som/yocto/build-test/tmp/deploy/images/stm32mp15-dn-som/fip/fip-stm32mp157f-dn-som-trusted.bin
+diff --git a/build-usb.sh b/build-usb.sh
+index c6b8cdc2b..8e169c95f 100755
+--- a/build-usb.sh
++++ b/build-usb.sh
+@@ -10,13 +10,13 @@ unset CFLAGS;
+ rm -r ../build/stm32mp1/release/
+ 
+ #Compilar Binarios para o dual core stm32mp157f
+-# make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_USB_PROGRAMMER=1 STM32MP15=1 
++# make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_USB_PROGRAMMER=1 STM32MP15=1
+ # make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb AARCH32_SP=sp_min bl32 dtbs
+ 
+ 
+ #Compilar Binarios para o dual core stm32mp151c
+-make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_USB_PROGRAMMER=1  
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_USB_PROGRAMMER=1
+ # make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 AARCH32_SP=sp_min DTB_FILE_NAME=stm32mp151c-dn-som.dtb bl32 dtbs
+ 
+ 
+-cp ../build/stm32mp1/release/tf-a-stm32mp157f-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp157f-ev1-usb.stm32
++cp ../build/stm32mp1/release/tf-a-stm32mp157f-dn-som.stm32 ../../som/yocto/build-test/tmp/deploy/images/stm32mp15-dn-som/arm-trusted-firmware/tf-a-stm32mp157f-dn-som-usb.stm32
+diff --git a/fdts/stm32mp15-pinctrl.dtsi b/fdts/stm32mp15-pinctrl.dtsi
+index 8ba25bda1..92709f215 100644
+--- a/fdts/stm32mp15-pinctrl.dtsi
++++ b/fdts/stm32mp15-pinctrl.dtsi
+@@ -271,18 +271,6 @@
+ 		};
+ 	};
+ 
+-	usart1_pins_a: usart1-0 {
+-		pins1 {
+-			pinmux = <STM32_PINMUX('Z', 7, AF7)>; /* USART1_TX */
+-			bias-disable;
+-			drive-push-pull;
+-			slew-rate = <0>;
+-		};
+-		pins2 {
+-			pinmux = <STM32_PINMUX('Z', 6, AF7)>; /* USART1_RX */
+-			bias-disable;
+-		};
+-	};
+ 
+ 	usart2_pins_a: usart2-0 {
+ 		pins1 {
+@@ -387,6 +375,20 @@
+ };
+ 
+ &pinctrl_z {
++
++	usart1_pins_a: usart1-0 {
++		pins1 {
++			pinmux = <STM32_PINMUX('Z', 7, AF7)>; /* USART1_TX */
++			bias-disable;
++			drive-push-pull;
++			slew-rate = <0>;
++		};
++		pins2 {
++			pinmux = <STM32_PINMUX('Z', 6, AF7)>; /* USART1_RX */
++			bias-disable;
++		};
++	};
++
+ 	i2c4_pins_a: i2c4-0 {
+ 		pins {
+ 			pinmux = <STM32_PINMUX('Z', 4, AF6)>, /* I2C4_SCL */
+diff --git a/fdts/stm32mp157f-dn-som.dts b/fdts/stm32mp157f-dn-som.dts
+index d13865032..8339a13fb 100644
+--- a/fdts/stm32mp157f-dn-som.dts
++++ b/fdts/stm32mp157f-dn-som.dts
+@@ -17,7 +17,7 @@
+ 	};
+ 
+ 	aliases {
+-		serial0 = &uart4; /*serial0 = &uart4;*/
+-		serial1 = &usart3;
++		serial0 = &usart1; /*serial0 = &uart4;*/
++		serial1 = &uart4;
+ 	};
+ };
+-- 
+2.34.1
+

@@ -1,0 +1,22 @@
+From b9c95af852d5de37702ed914b88260940a4a30ed Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mspantoja@hub-uea.org>
+Date: Thu, 14 Dec 2023 00:20:35 -0500
+Subject: [PATCH 8/8] update gitignore
+
+---
+ .gitignore | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/.gitignore b/.gitignore
+index 125e5d5c5..78acefdfc 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -45,3 +45,5 @@ tags
+ 
+ # Node.js
+ node_modules/
++*.bin
++build*.sh
+-- 
+2.34.1
+

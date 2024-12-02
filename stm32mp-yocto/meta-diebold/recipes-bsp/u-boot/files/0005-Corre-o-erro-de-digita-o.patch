@@ -1,0 +1,27 @@
+From 5a130d1a6f75f234ece0740069fd1d83a5c906a8 Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mateuspantoja9@gmail.com>
+Date: Thu, 19 Jan 2023 19:17:35 -0500
+Subject: [PATCH 05/17] =?UTF-8?q?Corre=C3=A7=C3=A3o=20erro=20de=20digita?=
+ =?UTF-8?q?=C3=A7=C3=A3o?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ arch/arm/mach-stm32mp/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/arch/arm/mach-stm32mp/Kconfig b/arch/arm/mach-stm32mp/Kconfig
+index 09227cabed..5f7a01a8b1 100644
+--- a/arch/arm/mach-stm32mp/Kconfig
++++ b/arch/arm/mach-stm32mp/Kconfig
+@@ -126,6 +126,5 @@ config CMD_STM32KEY
+ 
+ source "arch/arm/mach-stm32mp/Kconfig.13x"
+ source "arch/arm/mach-stm32mp/Kconfig.15x"
+-
+ source "arch/arm/mach-stm32mp/cmd_stm32prog/Kconfig"
+ endif
+-- 
+2.34.1
+

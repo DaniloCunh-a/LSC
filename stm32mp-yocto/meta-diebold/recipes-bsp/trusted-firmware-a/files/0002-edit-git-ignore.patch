@@ -1,0 +1,24 @@
+From 1c8c317d053dff3d597c7a0a8287ef7a5ef05382 Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mateuspantoja9@gmail.com>
+Date: Tue, 3 Jan 2023 22:19:37 -0500
+Subject: [PATCH 2/8] edit git ignore
+
+---
+ .gitignore | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.gitignore b/.gitignore
+index f52465811..125e5d5c5 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -8,6 +8,7 @@ cscope.*
+ 
+ # Ignore build directory
+ build/
++.vscode/
+ 
+ # Ignore build products from tools
+ tools/**/*.o
+-- 
+2.34.1
+

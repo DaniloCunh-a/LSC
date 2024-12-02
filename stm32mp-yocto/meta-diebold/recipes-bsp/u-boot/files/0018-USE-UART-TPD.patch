@@ -1,0 +1,50 @@
+From f513a14daeecb2fc84c69f8b5ce03121c8853a24 Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mspantoja@hub-uea.org>
+Date: Thu, 22 Feb 2024 22:12:25 -0400
+Subject: [PATCH] USE UART TPD
+
+---
+ arch/arm/dts/stm32mp157f-dn-som-u-boot.dtsi | 4 ++--
+ arch/arm/dts/stm32mp157f-dn-som.dts         | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/dts/stm32mp157f-dn-som-u-boot.dtsi b/arch/arm/dts/stm32mp157f-dn-som-u-boot.dtsi
+index 67e99e0b97..df1d57d5ac 100644
+--- a/arch/arm/dts/stm32mp157f-dn-som-u-boot.dtsi
++++ b/arch/arm/dts/stm32mp157f-dn-som-u-boot.dtsi
+@@ -206,7 +206,7 @@
+ };
+ 
+ #endif
+-/*
++
+ &usart1 {
+ 	u-boot,dm-pre-reloc;
+ };
+@@ -222,7 +222,7 @@
+ 		bias-pull-up;
+ 	};
+ };
+-*/
++
+ &uart4 {
+ 	u-boot,dm-pre-reloc;
+ };
+diff --git a/arch/arm/dts/stm32mp157f-dn-som.dts b/arch/arm/dts/stm32mp157f-dn-som.dts
+index f1d68dafaf..4e2b4fa79c 100644
+--- a/arch/arm/dts/stm32mp157f-dn-som.dts
++++ b/arch/arm/dts/stm32mp157f-dn-som.dts
+@@ -28,8 +28,8 @@
+ 
+ 	aliases {
+ 		ethernet0 = &ethernet0;
+-		serial0 = &uart4;
+-		serial1 = &usart1;
++		serial0 = &usart1; // Uso TPD
++		serial1 = &uart4; //Uso kit
+ 		serial2 = &usart2;
+ 		serial3 = &usart3;
+ 	};
+-- 
+2.34.1
+

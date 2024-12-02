@@ -1,1 +1,11 @@
-IOP.zip
+*.pyc
+*.pyo
+/*.patch
+*.swp
+*.orig
+*.rej
+*~
+dbd-tpd/
+dn-som/
+build_*/
+.vscode/

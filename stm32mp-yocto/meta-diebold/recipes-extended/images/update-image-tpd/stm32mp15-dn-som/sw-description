@@ -1,0 +1,36 @@
+ software =
+ {
+         version = "0.1.0";
+         hardware-compatibility = [ "1.0" ];
+         stable:
+         {
+                 main:
+                 {
+                         images: (
+                         {
+                                 filename = "diebold-image-base-@@MACHINE@@.ext4";
+                                 device = "/dev/mmcblk1p7";
+                         }
+                         );
+
+                         scripts: ({
+                          filename = "emmcsetup.lua";
+                          type = "lua";
+                  });
+                 };
+                 alt:
+                 {
+                         images: (
+                         {
+                                 filename = "diebold-image-tpd-@@MACHINE@@.ext4";
+                                 device = "/dev/mmcblk1p8";
+                         }
+                         );
+
+                         scripts: ({
+                                 filename = "emmcsetup.lua";
+                                 type = "lua";
+                         });
+                 };
+         };
+ }

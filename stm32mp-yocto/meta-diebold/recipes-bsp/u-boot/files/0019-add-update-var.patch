@@ -1,0 +1,38 @@
+diff --git a/include/configs/stm32mp151c_dn_som.h b/include/configs/stm32mp151c_dn_som.h
+index cce5669d..6f920119 100644
+--- a/include/configs/stm32mp151c_dn_som.h
++++ b/include/configs/stm32mp151c_dn_som.h
+@@ -11,6 +11,7 @@
+ #define STM32MP_BOARD_EXTRA_ENV \
+ 	"usb_pgood_delay=1000\0" \
+ 	"console=ttySTM0\0" \
++	"boot_now=7\0" \
+ 	"sdboot=env set boot_instance \"0 \";" \
+ 			 "env set boot_prefixes \"/mmc0_\";" \
+ 			 "env set boot_targets \"mmc0\";" \
+diff --git a/include/configs/stm32mp157f_dn_som.h b/include/configs/stm32mp157f_dn_som.h
+index d3b1e970..ade06313 100644
+--- a/include/configs/stm32mp157f_dn_som.h
++++ b/include/configs/stm32mp157f_dn_som.h
+@@ -11,6 +11,7 @@
+ #define STM32MP_BOARD_EXTRA_ENV \
+ 	"usb_pgood_delay=1000\0" \
+ 	"console=ttySTM0\0" \
++	"boot_now=7\0" \
+ 	"sdboot=env set boot_instance \"0 \";" \
+ 			 "env set boot_prefixes \"/mmc0_\";" \
+ 			 "env set boot_targets \"mmc0\";" \
+diff --git a/include/configs/stm32mp15_st_common.h b/include/configs/stm32mp15_st_common.h
+index c395f7f9..eda59e39 100644
+--- a/include/configs/stm32mp15_st_common.h
++++ b/include/configs/stm32mp15_st_common.h
+@@ -10,7 +10,8 @@
+ 
+ #define STM32MP_BOARD_EXTRA_ENV \
+ 	"usb_pgood_delay=1000\0" \
+-	"console=ttySTM0\0"
++	"console=ttySTM0\0" \
++	"boot_now=7\0" \
+ 
+ #include <configs/stm32mp15_common.h>
+ 

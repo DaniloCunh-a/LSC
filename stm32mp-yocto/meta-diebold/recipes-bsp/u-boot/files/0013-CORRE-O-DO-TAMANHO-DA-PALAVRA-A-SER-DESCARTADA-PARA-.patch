@@ -1,0 +1,29 @@
+From d91e108e1d41cdbf55007f65a91954056b58a8bf Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mateuspantoja9@gmail.com>
+Date: Tue, 28 Feb 2023 16:24:36 -0500
+Subject: [PATCH 13/17] =?UTF-8?q?CORRE=C3=87=C3=83O=20DO=20TAMANHO=20DA=20?=
+ =?UTF-8?q?PALAVRA=20A=20SER=20DESCARTADA=20PARA=20O=20BOARD=5FNAME?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ board/dn-lse/stm32mp157f-dn-som/stm32mp157f-dn-som.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/board/dn-lse/stm32mp157f-dn-som/stm32mp157f-dn-som.c b/board/dn-lse/stm32mp157f-dn-som/stm32mp157f-dn-som.c
+index a4d817d6ee..2ba899dde1 100644
+--- a/board/dn-lse/stm32mp157f-dn-som/stm32mp157f-dn-som.c
++++ b/board/dn-lse/stm32mp157f-dn-som/stm32mp157f-dn-som.c
+@@ -440,7 +440,7 @@ int board_late_init(void)
+ 			if (strncmp(fdt_compat, "lse,", 4) != 0) {
+ 				env_set("board_name", fdt_compat);
+ 			} else {
+-				env_set("board_name", fdt_compat + 3);
++				env_set("board_name", fdt_compat + 4);
+ 
+ 				buf_len = sizeof(dtb_name);
+ 				strncpy(dtb_name, fdt_compat + 4, buf_len);
+-- 
+2.34.1
+

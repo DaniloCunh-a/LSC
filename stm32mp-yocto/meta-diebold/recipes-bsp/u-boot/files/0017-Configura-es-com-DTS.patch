@@ -1,0 +1,147 @@
+From 577d880b4b86bdec60f74e8b505706578164802d Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mspantoja@hub-uea.org>
+Date: Tue, 14 Nov 2023 19:23:45 -0500
+Subject: [PATCH 17/17] =?UTF-8?q?Configura=C3=A7=C3=B5es=20com=20DTS?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ arch/arm/dts/stm32mp15-pinctrl.dtsi         | 41 +++++++++++----------
+ arch/arm/dts/stm32mp157f-dn-som-u-boot.dtsi |  5 ++-
+ arch/arm/dts/stm32mp157f-dn-som.dts         |  8 ++--
+ build.sh                                    |  7 ++--
+ 4 files changed, 30 insertions(+), 31 deletions(-)
+
+diff --git a/arch/arm/dts/stm32mp15-pinctrl.dtsi b/arch/arm/dts/stm32mp15-pinctrl.dtsi
+index df034b0933..d223b3f9c0 100644
+--- a/arch/arm/dts/stm32mp15-pinctrl.dtsi
++++ b/arch/arm/dts/stm32mp15-pinctrl.dtsi
+@@ -2010,26 +2010,6 @@
+ 		};
+ 	};
+ 
+-	usart1_pins_a: usart1-0 {
+-		pins1 {
+-			pinmux = <STM32_PINMUX('Z', 7, AF7)>; /* USART1_TX */
+-			bias-disable;
+-			drive-push-pull;
+-			slew-rate = <0>;
+-		};
+-		pins2 {
+-			pinmux = <STM32_PINMUX('Z', 6, AF7)>; /* USART2_RX */
+-			bias-disable;
+-		};
+-	};
+-
+-	usart1_sleep_pins_a: usart1-sleep-0 {
+-		pins {
+-			pinmux = <STM32_PINMUX('Z', 7, ANALOG)>, /* USART2_TX */
+-				 <STM32_PINMUX('Z', 6, ANALOG)>; /* USART2_RX */
+-		};
+-	};
+-
+ 	usart2_pins_a: usart2-0 {
+ 		pins1 {
+ 			pinmux = <STM32_PINMUX('F', 5, AF7)>, /* USART2_TX */
+@@ -2227,6 +2207,27 @@
+ };
+ 
+ &pinctrl_z {
++
++	usart1_pins_a: usart1-0 {
++		pins1 {
++			pinmux = <STM32_PINMUX('Z', 7, AF7)>; /* USART1_TX */
++			bias-disable;
++			drive-push-pull;
++			slew-rate = <0>;
++		};
++		pins2 {
++			pinmux = <STM32_PINMUX('Z', 6, AF7)>; /* USART2_RX */
++			bias-disable;
++		};
++	};
++
++	usart1_sleep_pins_a: usart1-sleep-0 {
++		pins {
++			pinmux = <STM32_PINMUX('Z', 7, ANALOG)>, /* USART2_TX */
++				 <STM32_PINMUX('Z', 6, ANALOG)>; /* USART2_RX */
++		};
++	};
++
+ 	i2c2_pins_b2: i2c2-0 {
+ 		pins {
+ 			pinmux = <STM32_PINMUX('Z', 0, AF3)>; /* I2C2_SCL */
+diff --git a/arch/arm/dts/stm32mp157f-dn-som-u-boot.dtsi b/arch/arm/dts/stm32mp157f-dn-som-u-boot.dtsi
+index 919e9c2212..67e99e0b97 100644
+--- a/arch/arm/dts/stm32mp157f-dn-som-u-boot.dtsi
++++ b/arch/arm/dts/stm32mp157f-dn-som-u-boot.dtsi
+@@ -206,6 +206,7 @@
+ };
+ 
+ #endif
++/*
+ &usart1 {
+ 	u-boot,dm-pre-reloc;
+ };
+@@ -217,11 +218,11 @@
+ 	};
+ 	pins2 {
+ 		u-boot,dm-pre-reloc;
+-		/* pull-up on rx to avoid floating level */
++
+ 		bias-pull-up;
+ 	};
+ };
+-
++*/
+ &uart4 {
+ 	u-boot,dm-pre-reloc;
+ };
+diff --git a/arch/arm/dts/stm32mp157f-dn-som.dts b/arch/arm/dts/stm32mp157f-dn-som.dts
+index c475d03266..f1d68dafaf 100644
+--- a/arch/arm/dts/stm32mp157f-dn-som.dts
++++ b/arch/arm/dts/stm32mp157f-dn-som.dts
+@@ -29,9 +29,9 @@
+ 	aliases {
+ 		ethernet0 = &ethernet0;
+ 		serial0 = &uart4;
+-		serial1 = &usart2;
+-		serial2 = &usart3;
+-		/* serial3 = &uart4; */
++		serial1 = &usart1;
++		serial2 = &usart2;
++		serial3 = &usart3;
+ 	};
+ 
+ 	chosen {
+@@ -631,8 +631,6 @@
+ 	pinctrl-names = "default", "sleep";
+ 	pinctrl-0 = <&usart1_pins_a>;
+ 	pinctrl-1 = <&usart1_sleep_pins_a>;
+-	/delete-property/dmas;
+-	/delete-property/dma-names;
+ 	status = "okay";
+ 
+ };
+diff --git a/build.sh b/build.sh
+index 106bf62643..7fc3581d5c 100755
+--- a/build.sh
++++ b/build.sh
+@@ -1,9 +1,8 @@
+ #! /bin/sh
+-
+-export DEVICE_TREE=stm32mp151c-dn-som
++rm -r ../build/stm32mp1/uboot
++export DEVICE_TREE=stm32mp157f-dn-som
+ export KBUILD_OUTPUT=../build/stm32mp1/uboot
+-make stm32mp151c_dn_som_defconfig
++make stm32mp157f_dn_som_defconfig
+ #make stm32mp15_defconfig
+ make all
+ 
+-# fiptool update --tos-fw ../build/stm32mp1/release/bl32.bin --fw-config ../build/stm32mp1/release/fdts/stm32mp151c-dn-som-fw-config.dtb --hw-config ../build/stm32mp1/uboot/u-boot.dtb --nt-fw ../build/stm32mp1/uboot/u-boot-nodtb.bin /home/pantoja/diebold/som/yocto/dn-som/tmp/deploy/images/stm32mp1/fip/fip-stm32mp157c-ev1-trusted.bin
+\ No newline at end of file
+-- 
+2.34.1
+

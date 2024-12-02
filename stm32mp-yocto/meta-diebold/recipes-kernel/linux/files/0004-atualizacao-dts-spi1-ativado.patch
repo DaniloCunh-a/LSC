@@ -1,0 +1,14 @@
+diff --git a/stm32mp157f-dn-som.dts.orig b/stm32mp157f-dn-som.dts
+index a79a352..866fd74 100644
+--- a/arch/arm/boot/dts/stm32mp157f-dn-som.dts
++++ b/arch/arm/boot/dts/stm32mp157f-dn-som.dts
+@@ -734,7 +734,7 @@
+ 	status = "okay";
+ 
+ 	spidev@0{
+-		status = "disabled";
++		status = "okay";  /* Ativa o spi1dev */
+         compatible = "linux,spidev";
+         reg = <0>;
+         spi-max-frequency = <4000000>;
+

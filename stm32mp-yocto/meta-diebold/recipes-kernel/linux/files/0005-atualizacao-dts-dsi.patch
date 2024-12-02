@@ -1,0 +1,27 @@
+diff --git a/stm32mp157f-dn-som.dts.orig b/stm32mp157f-dn-som.dts
+index e0e3f94..8c574fe 100644
+--- a/arch/arm/boot/dts/stm32mp157f-dn-som.dts
++++ b/arch/arm/boot/dts/stm32mp157f-dn-som.dts
+@@ -298,12 +298,13 @@
+ 
+ &dsi {
+ 	status = "okay";
++    reset-gpios = <&gpioe 12 GPIO_ACTIVE_LOW>;
+ 
+ 	ports {
+ 		port@0 {
+ 			reg = <0>;
+ 			dsi_in: endpoint {
+-				remote-endpoint = <&ltdc_ep1_out>;
++				remote-endpoint = <&ltdc_ep0_out>;
+ 			};
+ 		};
+ 
+@@ -319,6 +320,7 @@
+ 		compatible = "orisetech,otm8009a";
+ 		reg = <0>;
+ 		reset-gpios = <&gpioe 4 GPIO_ACTIVE_LOW>;
++		backlight = <&panel_backlight>;
+ 		power-supply = <&v3v3>;
+ 		status = "okay";
+ 

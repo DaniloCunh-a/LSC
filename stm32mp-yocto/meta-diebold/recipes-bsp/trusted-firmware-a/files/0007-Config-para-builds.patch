@@ -1,0 +1,73 @@
+From 561653ecd10876d19ae38a83ad55ff64dac79447 Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mspantoja@hub-uea.org>
+Date: Tue, 14 Nov 2023 19:22:28 -0500
+Subject: [PATCH 7/8] Config para builds
+
+---
+ build-emmc.sh | 8 ++++----
+ build-sd.sh   | 8 ++++----
+ build-usb.sh  | 4 ++--
+ 3 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/build-emmc.sh b/build-emmc.sh
+index 576b0757a..861b9311d 100755
+--- a/build-emmc.sh
++++ b/build-emmc.sh
+@@ -15,11 +15,11 @@ rm -r ../build/stm32mp1/release/
+ 
+ 
+ #Compilar Binarios para o dual core stm32mp151c
+-make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp151c-dn-som.dtb STM32MP_EMMC=1
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_EMMC=1
+ make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 AARCH32_SP=sp_min \
+-    DTB_FILE_NAME=stm32mp151c-dn-som.dtb BL33=../build/stm32mp1/uboot/u-boot-nodtb.bin \
++    DTB_FILE_NAME=stm32mp157f-dn-som.dtb BL33=../build/stm32mp1/uboot/u-boot-nodtb.bin \
+     BL33_CFG=../build/stm32mp1/uboot/u-boot.dtb bl32 dtbs fip
+ 
+ 
+-cp ../build/stm32mp1/release/tf-a-stm32mp151c-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp151c-ev1-emmc.stm32
+-cp ../build/stm32mp1/release/fip.bin  ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/fip/fip-stm32mp151c-ev1-trusted.bin
+\ No newline at end of file
++cp ../build/stm32mp1/release/tf-a-stm32mp157f-dn-som.stm32 ../../som/yocto/dbd-tpd/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp157f-ev1-emmc.stm32
++cp ../build/stm32mp1/release/fip.bin  ../../som/yocto/dbd-tpd/tmp/deploy/images/stm32mp1/fip/fip-stm32mp157f-ev1-trusted.bin
+diff --git a/build-sd.sh b/build-sd.sh
+index 16999013e..f016c7c5a 100755
+--- a/build-sd.sh
++++ b/build-sd.sh
+@@ -15,11 +15,11 @@ rm -r ../build/stm32mp1/release/
+ 
+ 
+ #Compilar Binarios para o dual core stm32mp151c
+-make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp151c-dn-som.dtb STM32MP_SDMMC=1
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_SDMMC=1
+ make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 AARCH32_SP=sp_min \
+-    DTB_FILE_NAME=stm32mp151c-dn-som.dtb BL33=../build/stm32mp1/uboot/u-boot-nodtb.bin \
++    DTB_FILE_NAME=stm32mp157f-dn-som.dtb BL33=../build/stm32mp1/uboot/u-boot-nodtb.bin \
+     BL33_CFG=../build/stm32mp1/uboot/u-boot.dtb bl32 dtbs fip
+ 
+ 
+-cp ../build/stm32mp1/release/tf-a-stm32mp151c-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp151c-ev1-sdcard.stm32
+-cp ../build/stm32mp1/release/fip.bin  ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/fip/fip-stm32mp151c-ev1-trusted.bin
+\ No newline at end of file
++cp ../build/stm32mp1/release/tf-a-stm32mp157f-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp157f-ev1-sdcard.stm32
++cp ../build/stm32mp1/release/fip.bin  ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/fip/fip-stm32mp157f-ev1-trusted.bin
+\ No newline at end of file
+diff --git a/build-usb.sh b/build-usb.sh
+index ddc79d1a1..c6b8cdc2b 100755
+--- a/build-usb.sh
++++ b/build-usb.sh
+@@ -15,8 +15,8 @@ rm -r ../build/stm32mp1/release/
+ 
+ 
+ #Compilar Binarios para o dual core stm32mp151c
+-make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp151c-dn-som.dtb STM32MP_USB_PROGRAMMER=1  
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_USB_PROGRAMMER=1  
+ # make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 AARCH32_SP=sp_min DTB_FILE_NAME=stm32mp151c-dn-som.dtb bl32 dtbs
+ 
+ 
+-cp ../build/stm32mp1/release/tf-a-stm32mp151c-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp151c-ev1-usb.stm32
+\ No newline at end of file
++cp ../build/stm32mp1/release/tf-a-stm32mp157f-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp157f-ev1-usb.stm32
+-- 
+2.34.1
+

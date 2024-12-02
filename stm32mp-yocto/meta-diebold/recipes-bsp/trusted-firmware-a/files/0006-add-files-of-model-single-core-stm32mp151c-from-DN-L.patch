@@ -1,0 +1,779 @@
+From 2a2a4a88c6f602e60092f1a76f81e1520b2e748a Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mateuspantoja9@gmail.com>
+Date: Fri, 16 Jun 2023 14:32:20 -0500
+Subject: [PATCH 6/8] add files of model single core stm32mp151c from DN-LSE
+
+---
+ build-emmc.sh                         |  15 +-
+ build-sd.sh                           |  15 +-
+ build-usb.sh                          |  12 +-
+ fdts/stm32mp151.dtsi                  |  24 ++
+ fdts/stm32mp151c-dn-som-fw-config.dts |   7 +
+ fdts/stm32mp151c-dn-som.dts           | 570 ++++++++++++++++++++++++++
+ fw-config.bin                         | Bin 0 -> 550 bytes
+ hw-config.bin                         | Bin 0 -> 114376 bytes
+ nt-fw.bin                             | Bin 0 -> 952928 bytes
+ tos-fw-config.bin                     | Bin 0 -> 18054 bytes
+ tos-fw.bin                            | Bin 0 -> 75188 bytes
+ 11 files changed, 634 insertions(+), 9 deletions(-)
+ create mode 100644 fdts/stm32mp151c-dn-som-fw-config.dts
+ create mode 100644 fdts/stm32mp151c-dn-som.dts
+ create mode 100644 fw-config.bin
+ create mode 100644 hw-config.bin
+ create mode 100644 nt-fw.bin
+ create mode 100644 tos-fw-config.bin
+ create mode 100644 tos-fw.bin
+
+diff --git a/build-emmc.sh b/build-emmc.sh
+index 78598c372..576b0757a 100755
+--- a/build-emmc.sh
++++ b/build-emmc.sh
+@@ -9,8 +9,17 @@ unset CFLAGS;
+ 
+ rm -r ../build/stm32mp1/release/
+ 
+-make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_EMMC=1 STM32MP15=1 
++#Compilar Binarios para o dual core stm32mp157f
++# make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_USB_PROGRAMMER=1 STM32MP15=1 
++# make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb AARCH32_SP=sp_min bl32 dtbs
+ 
+-make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb AARCH32_SP=sp_min bl32 dtbs
+ 
+-cp ../build/stm32mp1/release/tf-a-stm32mp157f-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp157f-ev1-emmc.stm32
+\ No newline at end of file
++#Compilar Binarios para o dual core stm32mp151c
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp151c-dn-som.dtb STM32MP_EMMC=1
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 AARCH32_SP=sp_min \
++    DTB_FILE_NAME=stm32mp151c-dn-som.dtb BL33=../build/stm32mp1/uboot/u-boot-nodtb.bin \
++    BL33_CFG=../build/stm32mp1/uboot/u-boot.dtb bl32 dtbs fip
++
++
++cp ../build/stm32mp1/release/tf-a-stm32mp151c-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp151c-ev1-emmc.stm32
++cp ../build/stm32mp1/release/fip.bin  ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/fip/fip-stm32mp151c-ev1-trusted.bin
+\ No newline at end of file
+diff --git a/build-sd.sh b/build-sd.sh
+index 83089c48b..16999013e 100755
+--- a/build-sd.sh
++++ b/build-sd.sh
+@@ -9,8 +9,17 @@ unset CFLAGS;
+ 
+ rm -r ../build/stm32mp1/release/
+ 
+-make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_SDMMC=1 STM32MP15=1 
++#Compilar Binarios para o dual core stm32mp157f
++# make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_USB_PROGRAMMER=1 STM32MP15=1 
++# make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb AARCH32_SP=sp_min bl32 dtbs
+ 
+-make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb AARCH32_SP=sp_min bl32 dtbs
+ 
+-cp ../build/stm32mp1/release/tf-a-stm32mp157f-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp157f-ev1-sdcard.stm32
+\ No newline at end of file
++#Compilar Binarios para o dual core stm32mp151c
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp151c-dn-som.dtb STM32MP_SDMMC=1
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 AARCH32_SP=sp_min \
++    DTB_FILE_NAME=stm32mp151c-dn-som.dtb BL33=../build/stm32mp1/uboot/u-boot-nodtb.bin \
++    BL33_CFG=../build/stm32mp1/uboot/u-boot.dtb bl32 dtbs fip
++
++
++cp ../build/stm32mp1/release/tf-a-stm32mp151c-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp151c-ev1-sdcard.stm32
++cp ../build/stm32mp1/release/fip.bin  ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/fip/fip-stm32mp151c-ev1-trusted.bin
+\ No newline at end of file
+diff --git a/build-usb.sh b/build-usb.sh
+index 858ecdf3d..ddc79d1a1 100755
+--- a/build-usb.sh
++++ b/build-usb.sh
+@@ -9,8 +9,14 @@ unset CFLAGS;
+ 
+ rm -r ../build/stm32mp1/release/
+ 
+-make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_USB_PROGRAMMER=1 STM32MP15=1 
++#Compilar Binarios para o dual core stm32mp157f
++# make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb STM32MP_USB_PROGRAMMER=1 STM32MP15=1 
++# make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb AARCH32_SP=sp_min bl32 dtbs
+ 
+-make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp157f-dn-som.dtb AARCH32_SP=sp_min bl32 dtbs
+ 
+-cp ../build/stm32mp1/release/tf-a-stm32mp157f-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp157f-ev1-usb.stm32
+\ No newline at end of file
++#Compilar Binarios para o dual core stm32mp151c
++make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 DTB_FILE_NAME=stm32mp151c-dn-som.dtb STM32MP_USB_PROGRAMMER=1  
++# make BUILD_BASE=../build ARM_ARCH_MAJOR=7 ARCH=aarch32 PLAT=stm32mp1 AARCH32_SP=sp_min DTB_FILE_NAME=stm32mp151c-dn-som.dtb bl32 dtbs
++
++
++cp ../build/stm32mp1/release/tf-a-stm32mp151c-dn-som.stm32 ../../som/yocto/dn-som/tmp/deploy/images/stm32mp1/arm-trusted-firmware/tf-a-stm32mp151c-ev1-usb.stm32
+\ No newline at end of file
+diff --git a/fdts/stm32mp151.dtsi b/fdts/stm32mp151.dtsi
+index 6e8a3a216..8e165fc6f 100644
+--- a/fdts/stm32mp151.dtsi
++++ b/fdts/stm32mp151.dtsi
+@@ -32,6 +32,26 @@
+ 		opp-shared;
+ 	};
+ 
++	nvmem_layout: nvmem_layout@0 {
++		compatible = "st,stm32-nvmem-layout";
++
++		nvmem-cells = <&cfg0_otp>,
++			      <&part_number_otp>,
++			      <&monotonic_otp>,
++			      <&nand_otp>,
++			      <&uid_otp>,
++			      <&package_otp>,
++			      <&hw2_otp>;
++
++		nvmem-cell-names = "cfg0_otp",
++				   "part_number_otp",
++				   "monotonic_otp",
++				   "nand_otp",
++				   "uid_otp",
++				   "package_otp",
++				   "hw2_otp";
++	};
++
+ 	psci {
+ 		compatible = "arm,psci-1.0";
+ 		method = "smc";
+@@ -92,6 +112,7 @@
+ 			clocks = <&rcc TIM12_K>;
+ 			clock-names = "int";
+ 			status = "disabled";
++			secure-status = "disabled";
+ 		};
+ 
+ 		usart2: serial@4000e000 {
+@@ -181,6 +202,7 @@
+ 			clocks = <&rcc TIM15_K>;
+ 			clock-names = "int";
+ 			status = "disabled";
++			secure-status = "disabled";
+ 		};
+ 
+ 		usbotg_hs: usb-otg@49000000 {
+@@ -279,6 +301,7 @@
+ 			clocks = <&rcc HASH1>;
+ 			resets = <&rcc HASH1_R>;
+ 			status = "disabled";
++			secure-status = "disabled";
+ 		};
+ 
+ 		rng1: rng@54003000 {
+@@ -287,6 +310,7 @@
+ 			clocks = <&rcc RNG1_K>;
+ 			resets = <&rcc RNG1_R>;
+ 			status = "disabled";
++			secure-status = "disabled";
+ 		};
+ 
+ 		fmc: memory-controller@58002000 {
+diff --git a/fdts/stm32mp151c-dn-som-fw-config.dts b/fdts/stm32mp151c-dn-som-fw-config.dts
+new file mode 100644
+index 000000000..83116d103
+--- /dev/null
++++ b/fdts/stm32mp151c-dn-som-fw-config.dts
+@@ -0,0 +1,7 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
++/*
++ * Copyright (c) 2020-2021, STMicroelectronics - All Rights Reserved
++ */
++
++#define DDR_SIZE	0x20000000 /* 512MB */
++#include "stm32mp15-fw-config.dtsi"
+diff --git a/fdts/stm32mp151c-dn-som.dts b/fdts/stm32mp151c-dn-som.dts
+new file mode 100644
+index 000000000..395a8b581
+--- /dev/null
++++ b/fdts/stm32mp151c-dn-som.dts
+@@ -0,0 +1,570 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
++/*
++ * Copyright (C) STMicroelectronics 2019 - All Rights Reserved
++ * Author: Alexandre Torgue <alexandre.torgue@st.com> for STMicroelectronics.
++ */
++/dts-v1/;
++#include "stm32mp151.dtsi"
++#include "stm32mp15xa.dtsi"
++#include "stm32mp15-pinctrl.dtsi"
++#include "stm32mp15xxac-pinctrl.dtsi"
++
++#include <dt-bindings/soc/st,stm32-etzpc.h>
++
++#include <dt-bindings/clock/stm32mp1-clksrc.h>
++#include <dt-bindings/power/stm32mp1-power.h>
++
++#include "stm32mp15-ddr3-1x4Gb-1066-binG.dtsi"
++
++
++/ {
++	model = "DN-SOM by LSE 2023";
++	compatible = "lse,stm32mp151c-dn-som", "lse,stm32mp151";
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++	};
++
++	aliases {
++		serial0 = &uart4; /*serial0 = &uart4;*/
++		serial1 = &usart3;
++	};
++
++	memory@c0000000 {
++		device_type = "memory";
++		reg = <0xc0000000 0x20000000>;  /*reg = <0xC0000000 0x40000000>;*/
++	};
++
++	vin: vin {
++		compatible = "regulator-fixed";
++		regulator-name = "vin";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-always-on;
++	};
++	
++};
++
++&bsec {
++	board_id: board_id@ec {
++		reg = <0xec 0x4>;
++		st,non-secure-otp;
++	};
++};
++
++&clk_hse {
++	st,digbypass;
++};
++
++&cpu0{
++	cpu-supply = <&vddcore>;
++};
++
++// &cryp1 {
++// 	status = "okay";
++// };
++
++&etzpc {
++	st,decprot = <
++		DECPROT(STM32MP1_ETZPC_USART1_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
++		DECPROT(STM32MP1_ETZPC_SPI6_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
++		DECPROT(STM32MP1_ETZPC_I2C4_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
++		DECPROT(STM32MP1_ETZPC_I2C6_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
++		DECPROT(STM32MP1_ETZPC_RNG1_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
++		DECPROT(STM32MP1_ETZPC_HASH1_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
++		DECPROT(STM32MP1_ETZPC_CRYP1_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
++		DECPROT(STM32MP1_ETZPC_DDRCTRL_ID, DECPROT_NS_R_S_W, DECPROT_LOCK)
++		DECPROT(STM32MP1_ETZPC_DDRPHYC_ID, DECPROT_NS_R_S_W, DECPROT_LOCK)
++		DECPROT(STM32MP1_ETZPC_STGENC_ID, DECPROT_S_RW, DECPROT_LOCK)
++		DECPROT(STM32MP1_ETZPC_BKPSRAM_ID, DECPROT_S_RW, DECPROT_LOCK)
++		DECPROT(STM32MP1_ETZPC_IWDG1_ID, DECPROT_S_RW, DECPROT_LOCK)
++	>;
++};
++
++&hash1 {
++	status = "okay";
++};
++
++&i2c4 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&i2c4_pins_a>;
++	i2c-scl-rising-time-ns = <185>;
++	i2c-scl-falling-time-ns = <20>;
++	clock-frequency = <400000>;
++	status = "okay";
++
++	pmic: stpmic@33 {
++		compatible = "st,stpmic1";
++		reg = <0x33>;
++		interrupts-extended = <&exti_pwr 55 IRQ_TYPE_EDGE_FALLING>;
++		interrupt-controller;
++		#interrupt-cells = <2>;
++		status = "okay";
++
++		regulators {
++			compatible = "st,stpmic1-regulators";
++			buck1-supply = <&vin>;
++			buck2-supply = <&vin>;
++			buck3-supply = <&vin>;
++			buck4-supply = <&vin>;
++			ldo1-supply = <&v3v3>;
++			ldo2-supply = <&v3v3>;
++			ldo3-supply = <&vdd_ddr>;
++			ldo4-supply = <&vin>;
++			ldo5-supply = <&v3v3>;
++			ldo6-supply = <&v3v3>;
++			vref_ddr-supply = <&vin>;
++			boost-supply = <&vin>;
++			pwr_sw1-supply = <&bst_out>;
++			pwr_sw2-supply = <&bst_out>;
++
++			vddcore: buck1 {
++				regulator-name = "vddcore";
++				regulator-min-microvolt = <1200000>;
++				regulator-max-microvolt = <1350000>;
++				regulator-always-on;
++				regulator-initial-mode = <0>;
++				regulator-over-current-protection;
++			};
++
++			vdd_ddr: buck2 {
++				regulator-name = "vdd_ddr";
++				regulator-min-microvolt = <1350000>;
++				regulator-max-microvolt = <1350000>;
++				regulator-always-on;
++				regulator-initial-mode = <0>;
++				regulator-over-current-protection;
++			};
++
++			vdd: buck3 {
++				regulator-name = "vdd";
++				regulator-min-microvolt = <3300000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-always-on;
++				st,mask-reset;
++				regulator-initial-mode = <0>;
++				regulator-over-current-protection;
++			};
++
++			v3v3: buck4 {
++				regulator-name = "v3v3";
++				regulator-min-microvolt = <3300000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-always-on;
++				regulator-over-current-protection;
++				regulator-initial-mode = <0>;
++			};
++
++			vdda: ldo1 {
++				regulator-name = "vdda";
++				regulator-min-microvolt = <2900000>;
++				regulator-max-microvolt = <2900000>;
++			};
++
++			v2v8: ldo2 {
++				regulator-name = "v2v8";
++				regulator-min-microvolt = <2800000>;
++				regulator-max-microvolt = <2800000>;
++			};
++
++			vtt_ddr: ldo3 {
++				regulator-name = "vtt_ddr";
++				regulator-always-on;
++				regulator-over-current-protection;
++				st,regulator-sink-source;
++			};
++
++			vdd_usb: ldo4 {
++				regulator-name = "vdd_usb";
++				regulator-min-microvolt = <3300000>;
++				regulator-max-microvolt = <3300000>;
++			};
++
++			vdd_sd: ldo5 {
++				regulator-name = "vdd_sd";
++				regulator-min-microvolt = <2900000>;
++				regulator-max-microvolt = <2900000>;
++				regulator-boot-on;
++			};
++
++			v1v8: ldo6 {
++				regulator-name = "v1v8";
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <1800000>;
++				regulator-enable-ramp-delay = <300000>;
++
++			};
++
++			vref_ddr: vref_ddr {
++				regulator-name = "vref_ddr";
++				regulator-always-on;
++			};
++
++			bst_out: boost {
++				regulator-name = "bst_out";
++			};
++
++			vbus_otg: pwr_sw1 {
++				regulator-name = "vbus_otg";
++			};
++
++			vbus_sw: pwr_sw2 {
++				regulator-name = "vbus_sw";
++				regulator-active-discharge = <1>;
++			};
++		};
++	};
++};
++
++&iwdg2 {
++	timeout-sec = <32>;
++	secure-timeout-sec = <5>;
++	status = "okay";
++	secure-status = "okay";
++
++};
++
++&nvmem_layout {
++	nvmem-cells = <&cfg0_otp>,
++		      <&part_number_otp>,
++		      <&monotonic_otp>,
++		      <&nand_otp>,
++		      <&uid_otp>,
++		      <&package_otp>,
++		      <&hw2_otp>,
++		      <&pkh_otp>,
++		      <&board_id>;
++
++	nvmem-cell-names = "cfg0_otp",
++			   "part_number_otp",
++			   "monotonic_otp",
++			   "nand_otp",
++			   "uid_otp",
++			   "package_otp",
++			   "hw2_otp",
++			   "pkh_otp",
++			   "board_id";
++};
++
++&pwr_regulators {
++	system_suspend_supported_soc_modes = <
++		STM32_PM_CSLEEP_RUN
++		STM32_PM_CSTOP_ALLOW_LP_STOP
++		STM32_PM_CSTOP_ALLOW_LPLV_STOP
++		STM32_PM_CSTOP_ALLOW_STANDBY_DDR_SR
++	>;
++	system_off_soc_mode = <STM32_PM_CSTOP_ALLOW_STANDBY_DDR_OFF>;
++	vdd-supply = <&vdd>;
++	vdd_3v3_usbfs-supply = <&vdd_usb>;
++};
++
++&rcc {
++	st,hsi-cal;
++	st,csi-cal;
++	st,cal-sec = <60>;
++	st,clksrc = <
++		CLK_MPU_PLL1P
++		CLK_AXI_PLL2P
++		CLK_MCU_PLL3P
++		CLK_PLL12_HSE
++		CLK_PLL3_HSE
++		CLK_PLL4_HSE
++		CLK_RTC_LSE
++		CLK_MCO1_DISABLED
++		CLK_MCO2_DISABLED
++	>;
++
++	st,clkdiv = <
++		1 /*MPU*/
++		0 /*AXI*/
++		0 /*MCU*/
++		1 /*APB1*/
++		1 /*APB2*/
++		1 /*APB3*/
++		1 /*APB4*/
++		2 /*APB5*/
++		23 /*RTC*/
++		0 /*MCO1*/
++		0 /*MCO2*/
++	>;
++
++	st,pkcs = <
++		CLK_CKPER_HSE
++		CLK_FMC_ACLK
++		CLK_QSPI_ACLK
++		CLK_ETH_PLL4P
++		CLK_SDMMC12_PLL4P
++		CLK_DSI_DSIPLL
++		CLK_STGEN_HSE
++		CLK_USBPHY_HSE
++		CLK_SPI2S1_PLL3Q
++		CLK_SPI2S23_PLL3Q
++		CLK_SPI45_HSI
++		CLK_SPI6_HSI
++		CLK_I2C46_HSI
++		CLK_SDMMC3_PLL4P
++		CLK_USBO_USBPHY
++		CLK_ADC_CKPER
++		CLK_CEC_LSE
++		CLK_I2C12_HSI
++		CLK_I2C35_HSI
++		CLK_UART1_HSI
++		CLK_UART24_HSI
++		CLK_UART35_HSI
++		CLK_UART6_HSI
++		CLK_UART78_HSI
++		CLK_SPDIF_PLL4P
++		CLK_FDCAN_PLL4R
++		CLK_SAI1_PLL3Q
++		CLK_SAI2_PLL3Q
++		CLK_SAI3_PLL3Q
++		CLK_SAI4_PLL3Q
++		CLK_RNG1_CSI
++		CLK_RNG2_LSI
++		CLK_LPTIM1_PCLK1
++		CLK_LPTIM23_PCLK3
++		CLK_LPTIM45_LSE
++	>;
++
++	/* VCO = 1066.0 MHz => P = 266 (AXI), Q = 533 (GPU), R = 533 (DDR) */
++	pll2: st,pll@1 {
++		compatible = "st,stm32mp1-pll";
++		reg = <1>;
++		cfg = <2 65 1 0 0 PQR(1,1,1)>;
++		frac = <0x1400>;
++	};
++
++	/* VCO = 417.8 MHz => P = 209, Q = 24, R = 11 */
++	pll3: st,pll@2 {
++		compatible = "st,stm32mp1-pll";
++		reg = <2>;
++		cfg = <1 33 1 16 36 PQR(1,1,1)>;
++		frac = <0x1a04>;
++	};
++
++	/* VCO = 594.0 MHz => P = 99, Q = 74, R = 74 */
++	/* VCO = 600.0 MHz => P = 25, Q = 50, R = 50 */
++	pll4: st,pll@3 {
++		compatible = "st,stm32mp1-pll";
++		reg = <3>;
++		// cfg = <3 98 5 7 7 PQR(1,1,1)>;
++		cfg = < 1 49 23 11 11 PQR(1,1,1) >;
++	};
++};
++
++&rng1 {
++	status = "okay";
++	secure-status = "okay";
++
++};
++
++&rtc {
++	status = "okay";
++	secure-status = "okay";
++
++};
++
++&sdmmc1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&sdmmc1_b4_pins_a>;
++	disable-wp;
++	st,neg-edge;
++	bus-width = <4>;
++	vmmc-supply = <&v3v3>;
++	status = "okay";
++};
++
++&sdmmc2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&sdmmc2_b4_pins_a &sdmmc2_d47_pins_a>;
++	non-removable;
++	no-sd;
++	no-sdio;
++	st,neg-edge;
++	bus-width = <8>;
++	vmmc-supply = <&v3v3>;
++	vqmmc-supply = <&vdd>;
++	mmc-ddr-3_3v;
++	status = "okay";
++};
++/*
++&timers15 {
++	status = "okay";
++	st,hsi-cal-input = <7>;
++	st,csi-cal-input = <8>;
++};
++
++&usart1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&usart1_pins_a>;
++	status = "okay";
++};
++*/
++&uart4 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart4_pins_a>;
++	status = "okay";
++};
++
++&usbotg_hs {
++	pinctrl-0 = <&usbotg_hs_pins_a>;
++	pinctrl-names = "default";
++	phys = <&usbphyc_port1 0>;
++	phy-names = "usb2-phy";
++	vbus-supply = <&vbus_otg>; 
++	status = "okay";
++};
++
++&usbphyc {
++	status = "okay";
++};
++
++&usbphyc_port0 {
++	phy-supply = <&vdd_usb>;
++};
++
++&usbphyc_port1 {
++	phy-supply = <&vdd_usb>;
++};
++
++/* Low-power states of regulators */
++
++&v1v8 {
++	standby-ddr-sr {
++		regulator-off-in-suspend;
++	};
++	standby-ddr-off {
++		regulator-off-in-suspend;
++	};
++};
++
++&v2v8 {
++	standby-ddr-sr {
++		regulator-off-in-suspend;
++	};
++	standby-ddr-off {
++		regulator-off-in-suspend;
++	};
++};
++
++&v3v3 {
++	standby-ddr-sr {
++		regulator-off-in-suspend;
++	};
++	standby-ddr-off {
++		regulator-off-in-suspend;
++	};
++};
++
++&vdd {
++	lp-stop {
++		regulator-suspend-microvolt = <3300000>;
++		regulator-on-in-suspend;
++	};
++	lplv-stop {
++		regulator-suspend-microvolt = <3300000>;
++		regulator-on-in-suspend;
++	};
++	standby-ddr-sr {
++		regulator-suspend-microvolt = <3300000>;
++		regulator-on-in-suspend;
++	};
++	standby-ddr-off {
++		regulator-suspend-microvolt = <3300000>;
++		regulator-on-in-suspend;
++	};
++};
++
++&vdda {
++	standby-ddr-sr {
++		regulator-off-in-suspend;
++	};
++	standby-ddr-off {
++		regulator-off-in-suspend;
++	};
++};
++
++&vddcore {
++	lp-stop {
++		regulator-on-in-suspend;
++		regulator-suspend-microvolt = <1200000>;
++	};
++	lplv-stop {
++		regulator-on-in-suspend;
++		regulator-suspend-microvolt = <900000>;
++	};
++	standby-ddr-sr {
++		regulator-off-in-suspend;
++	};
++	standby-ddr-off {
++		regulator-off-in-suspend;
++	};
++};
++
++&vdd_ddr {
++	lp-stop {
++		regulator-suspend-microvolt = <1350000>;
++		regulator-on-in-suspend;
++	};
++	lplv-stop {
++		regulator-suspend-microvolt = <1350000>;
++		regulator-on-in-suspend;
++	};
++	standby-ddr-sr {
++		regulator-suspend-microvolt = <1350000>;
++		regulator-on-in-suspend;
++	};
++	standby-ddr-off {
++		regulator-off-in-suspend;
++	};
++};
++
++&vdd_sd {
++	standby-ddr-sr {
++		regulator-off-in-suspend;
++	};
++	standby-ddr-off {
++		regulator-off-in-suspend;
++	};
++};
++
++&vdd_usb {
++	standby-ddr-sr {
++		regulator-off-in-suspend;
++	};
++	standby-ddr-off {
++		regulator-off-in-suspend;
++	};
++};
++
++&vref_ddr {
++	lp-stop {
++		regulator-on-in-suspend;
++	};
++	lplv-stop {
++		regulator-on-in-suspend;
++	};
++	standby-ddr-sr {
++		regulator-on-in-suspend;
++	};
++	standby-ddr-off {
++		regulator-off-in-suspend;
++	};
++};
++
++
++&vtt_ddr {
++	lp-stop {
++		regulator-off-in-suspend;
++	};
++	lplv-stop {
++		regulator-off-in-suspend;
++	};
++	standby-ddr-sr {
++		regulator-off-in-suspend;
++	};
++	standby-ddr-off {
++		regulator-off-in-suspend;
++	};
++};
++
+diff --git a/fw-config.bin b/fw-config.bin
+new file mode 100644
+index 000000000..8dacd6cd4
+Binary files /dev/null and b/fw-config.bin differ
+diff --git a/hw-config.bin b/hw-config.bin
+new file mode 100644
+index 000000000..7fbc5a4d0
+Binary files /dev/null and b/hw-config.bin differ
+diff --git a/nt-fw.bin b/nt-fw.bin
+new file mode 100644
+index 000000000..e4e5de3bd
+Binary files /dev/null and b/nt-fw.bin differ
+diff --git a/tos-fw-config.bin b/tos-fw-config.bin
+new file mode 100644
+index 000000000..72547d975
+Binary files /dev/null and b/tos-fw-config.bin differ
+diff --git a/tos-fw.bin b/tos-fw.bin
+new file mode 100644
+index 000000000..77a3bfa0c
+Binary files /dev/null and b/tos-fw.bin differ
+-- 
+2.34.1
+

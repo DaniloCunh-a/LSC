@@ -1,0 +1,26 @@
+From b9af13b3009298b9451fae5b947156c58ce5f697 Mon Sep 17 00:00:00 2001
+From: Mateus Pantoja <mateuspantoja9@gmail.com>
+Date: Thu, 2 Feb 2023 23:31:44 -0500
+Subject: [PATCH 08/17] Change the config to based on CPU (not board
+ stm32mp15_st_common)
+
+---
+ board/dn-lse/stm32mp157f-dn-som/Kconfig | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/board/dn-lse/stm32mp157f-dn-som/Kconfig b/board/dn-lse/stm32mp157f-dn-som/Kconfig
+index c1c82a9c38..1064c69c41 100644
+--- a/board/dn-lse/stm32mp157f-dn-som/Kconfig
++++ b/board/dn-lse/stm32mp157f-dn-som/Kconfig
+@@ -7,7 +7,6 @@ config SYS_VENDOR
+ 	default "dn-lse"
+ 
+ config SYS_CONFIG_NAME
+-	default "stm32mp15_st_common"
++	default "stm32mp15_common"
+ 	
+-source "board/st/common/Kconfig"
+ endif
+-- 
+2.34.1
+

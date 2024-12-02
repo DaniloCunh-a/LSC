@@ -1,0 +1,13 @@
+diff --git a/stm32mp151.dtsi.orig b/stm32mp151.dtsi
+index 2d403bb..b1fc083 100644
+--- a/arch/arm/boot/dts/stm32mp151.dtsi
++++ b/arch/arm/boot/dts/stm32mp151.dtsi
+@@ -781,7 +781,7 @@
+ 			dmas = <&dmamux1 37 0x400 0x01>,
+ 			       <&dmamux1 38 0x400 0x01>;
+ 			dma-names = "rx", "tx";
+-			status = "disabled";
++			status = "okay";  /* SPI1 - Ativado */
+ 		};
+ 
+ 		i2s1: audio-controller@44004000 {
